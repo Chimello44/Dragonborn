@@ -38,63 +38,6 @@ const circuitSchema = {
 // Creating Model, which is the constructor method.
 const Xconn = mongoose.model("Connection", circuitSchema);
 
-// const circuit = new Xconn({
-//   _id: 123456,
-//   serviceprovider: "telefonica",
-//   bandwidth: 10,
-//   rack: "R9000",
-//   patchpanel: "LIU 15",
-//   port: "1/2",
-//   device: "gru1-br-cor-r3",
-//   interface: "et-0/0/1",
-//   az: "gru1",
-//   cluster: "gru"
-// });
-//
-// const circuit2 = new Xconn({
-//   _id: 654321,
-//   serviceprovider: "embratel",
-//   bandwidth: 100,
-//   rack: "R9000",
-//   patchpanel: "LIU 15",
-//   port: "3/4",
-//   device: "gru2-br-cor-r4",
-//   interface: "et-0/0/49",
-//   az: "gru2",
-//   cluster: "gru"
-// });
-//
-// const circuit3 = new Xconn({
-//   _id: 987654,
-//   serviceprovider: "google",
-//   bandwidth: 100,
-//   rack: "R9000",
-//   patchpanel: "LIU 15",
-//   port: "3/4",
-//   device: "gru3-br-cor-r2",
-//   interface: "et-0/0/11",
-//   az: "gru3",
-//   cluster: "gru"
-// });
-//
-// const circuit4 = new Xconn({
-//   _id: 456789,
-//   serviceprovider: "microsoft",
-//   bandwidth: 100,
-//   rack: "R9000",
-//   patchpanel: "LIU 15",
-//   port: "3/4",
-//   device: "gru4-br-cor-r1",
-//   interface: "xe-0/0/10",
-//   az: "gru4",
-//   cluster: "gru"
-// });
-
-
-// circuit.save();
-// circuit2.save();
-// circuit3.save();
-// circuit4.save();
 
 // This action is triggered when a request is received at the home route.
 app.get("/", function(req, res){
@@ -155,6 +98,8 @@ app.post("/add", function(req, res){
   });
 
   circuit.save();
+
+  res.redirect("/add");
 
 });
 

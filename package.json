@@ -1,0 +1,26 @@
+{
+  "name": "skyrimproject",
+  "version": "1.0.0",
+  "description": "Tool to track the deployment of peering and transit circuits.",
+  "main": "app.js",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "lodash": "^4.17.15",
+    "mongoose": "^5.6.9"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/brennobiwan/SkyrimProject.git"
+  },
+  "author": "Brenno Rodrigues & Hugo Chimello",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/brennobiwan/SkyrimProject/issues"
+  },
+  "homepage": "https://github.com/brennobiwan/SkyrimProject#readme"
+}
