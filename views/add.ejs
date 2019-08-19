@@ -3,7 +3,9 @@
 <div class="body">
   <div class="content2">
 
-    <p class="description">We drink to our youth, for days come and gone. For the Age of Aggression is just about done</p>
+    <h2>Fill in the form below to register a new circuit</h2>
+
+    <h5 class="text-secondary"><%= skyrimPhrases %></h5>
 
     <form action="/add" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
       <div>
@@ -35,15 +37,11 @@
       </div>
 
       <div>
-        <input class="inputForm form-control" type="text" name="az" placeholder="AZ (e.g. gru1)" autocomplete="off" required />
-      </div>
-
-      <div>
         <input class="inputForm form-control" type=Number name="bandwidth" placeholder="Bandwidth" autocomplete="off" required />
       </div>
 
       <div>
-        <button class="addButton btn btn-secondary btn-lg btn-block" type="submit" name="submit">Submit</button>
+        <button class="addButton btn btn-secondary btn-lg btn-block" type="submit" name="submit">Add</button>
       </div>
     </form>
 

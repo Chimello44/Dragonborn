@@ -34,6 +34,26 @@ const circuitSchema = {
 };
 
 
+const skyrimPhrases = [
+  "Believe, believe, the dragonborn comes",
+  "Beware, beware, the dragonborn comes",
+  "Dovahkiin, dovahkiin, naal ok zin los vahriin",
+  "I used to be an adventurer like you, then I took an arrow to the knee.",
+  "Nords are so serious about beards. So many beards. M'aiq thinks they wish they had glorious manes like Khajiit.",
+  "What is better? To be born good, or to overcome your evil nature through great effort?",
+  "Drem. Patience. There are formalities that must be observed, at the first meeting of two of the dov. By long tradition, the elder speaks first. Hear my Thu'um! Feel it in your bones. Match it, if you are Dovahkiin!",
+  "Fus Ro Dah!",
+  "My favorite drinking buddy! Let's get some mead.",
+  "You do not even know our tongue, do you? Such arrogance, to dare take for yourself the name of Dovah!",
+  "In their tongue he is Dovahkiin - Dragonborn",
+  "We drink to our youth, for days come and gone. For the Age of Aggression is just about done",
+  "We're the children of Skyrim, and we fight all our lives"
+];
+
+function randomSkyrimPhrase(max){
+  return Math.floor(Math.random() * max);
+}
+
 
 // Creating Model, which is the constructor method.
 const Xconn = mongoose.model("Connection", circuitSchema);
@@ -46,15 +66,22 @@ app.get("/", function(req, res){
 
 
 app.get("/search", function(req, res){
-  res.render("search.ejs");
+  res.render("search.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(12)]
+  });
+
 });
 
 app.get("/add", function(req, res){
-  res.render("add.ejs");
+  res.render("add.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(12)]
+  });
 });
 
 app.get("/update", function(req, res){
-  res.render("update.ejs");
+  res.render("update.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(12)]
+  });
 });
 
 
@@ -64,12 +91,14 @@ app.post("/result", function(req, res){
   const valueOfData = _.toLower(req.body.inputForm);
   const query = {};
   query[typeOfData] = valueOfData.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const searchTitle = _.toUpper(valueOfData)
   console.log(query);
 
   Xconn.find(query, function(err, connection){
     res.render("result.ejs", {
       connection: connection,
-      valueOfData: valueOfData
+      valueOfData: searchTitle,
+      skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(12)]
     });
   });
 });
@@ -83,7 +112,13 @@ app.post("/add", function(req, res){
   const device = _.toLower(req.body.device);
   const interface = _.toLower(req.body.interface);
   const bandwidth = _.toLower(req.body.bandwidth);
-  const az = _.toLower(req.body.az);
+  // const az = _.toLower(req.body.az);
+
+  if (device[5] == "-") {
+    var az = device.slice(0,5);
+  } else {
+    var az = device.slice(0,4);
+  }
 
   const circuit = new Xconn({
     _id: serialId,
@@ -97,10 +132,9 @@ app.post("/add", function(req, res){
     cluster: device.slice(0,3)
   });
 
-  circuit.save();
+  //circuit.save();
 
   res.redirect("/add");
-
 });
 
 
