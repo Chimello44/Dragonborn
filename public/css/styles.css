@@ -1,0 +1,83 @@
+.container-fluid{
+  padding: 0;
+  margin: 0;
+}
+
+.navbar-brand{
+  font-family: 'MedievalSharp';
+  font-size: 1.5rem;
+}
+
+.content{
+  height: 100vh;
+  margin: 0 auto;
+  background-color: #f8f8f8;
+  padding: 13% 15% 0;
+  text-align: center;
+  width: 60%;
+  font-family: 'Noto Serif JP', serif;
+}
+
+.content2{
+  height: 100vh;
+  margin: 0 auto;
+  background-color: #f8f8f8;
+  padding: 10% 15% 0;
+  text-align: center;
+  width: 60%;
+  font-family: 'Noto Serif JP', serif;
+}
+
+.title{
+  padding: 0 0 2rem 0;
+}
+
+.description{
+  line-height: 2rem;
+  font-size: 1.5rem;
+}
+
+.logo{
+  padding-top: 15%;
+  width: 15%;
+}
+
+.searchButton{
+  margin-top: 10%;
+}
+
+.addButton{
+  margin-top: 10%;
+}
+
+.inputForm{
+  margin: 10% auto 0;
+  /* text-align: center; */
+}
+
+.row{
+  margin-top: 5%;
+  text-align: center;
+}
+
+.tableMargin{
+  margin-top: 7%;
+}
+
+table {
+  table-layout: fixed ;
+  width: 100% ;
+  text-align: center;
+}
+td {
+  width: 25% ;
+}
+
+.tableHead{
+  font-size: 1.5rem;
+}
+
+h2, h5{
+  text-align: center;
+  padding-bottom: 2%;
+}
