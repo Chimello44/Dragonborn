@@ -4,8 +4,13 @@
 }
 
 .navbar-brand{
-  font-family: 'MedievalSharp';
-  font-size: 1.5rem;
+  /* font-family: 'MedievalSharp'; */
+  font-family: 'Josefin Sans', sans-serif;
+  font-size: 1.8rem;
+}
+
+.nav-item{
+  font-size: 1.4rem;
 }
 
 .content{
