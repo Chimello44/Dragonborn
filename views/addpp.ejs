@@ -1,0 +1,57 @@
+<%- include("header"); -%>
+
+<div class="body">
+  <div class="content2">
+
+    <h2>Fill in the form below to register a new Patch-Panel</h2>
+
+    <h5 class="text-secondary"><%= skyrimPhrases %></h5>
+
+    <form action="/add" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
+      <div>
+        <input class="inputForm form-control" type="text" name="serialId" placeholder="Cross-Connect ID" autocomplete="off" required />
+      </div>
+
+      <div>
+        <input class="inputForm form-control" type="text" name="serviceProvider" placeholder="Service Provider" autocomplete="off" required />
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <input type="text" name="patchPanel" class="inputForm form-control" placeholder="Patch-Panel" autocomplete="off" required>
+        </div>
+
+        <div class="col">
+          <input type="text" name="port" class="inputForm form-control" placeholder="Port (e.g. 1/2)" autocomplete="off" required>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <input type="text" name="device" class="inputForm form-control" placeholder="Device (e.g. gru1-br-cor-r3)" autocomplete="off" required>
+        </div>
+
+        <div class="col">
+          <input type="text" name="interface" class="inputForm form-control" placeholder="Interface (e.g. et-0/0/11)" autocomplete="off" required>
+        </div>
+      </div>
+
+      <div>
+        <input class="inputForm form-control" type=Number name="bandwidth" placeholder="Bandwidth" autocomplete="off" required />
+      </div>
+
+      <div>
+        <button class="addButton btn btn-secondary btn-lg btn-block" type="submit" name="submit">Add</button>
+      </div>
+    </form>
+
+    <a href="/add" class="addButton btn btn-outline-secondary">Return</a>
+
+
+
+
+
+  </div>
+</div>
+
+<%- include("footer"); -%>

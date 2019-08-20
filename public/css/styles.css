@@ -86,3 +86,14 @@ h2, h5{
   text-align: center;
   padding-bottom: 1%;
 }
+
+.footer {
+  position:sticky;
+  margin-top: 5%;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: red;
+  color: white;
+  text-align: center;
+}
