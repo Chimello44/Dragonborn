@@ -6,16 +6,23 @@
     <h2>Select the type of information you want to search, then fell in the corresponding parameter.</h2>
     <h5 class="text-secondary"><%= skyrimPhrases %></h5>
     <form action="/result" method="post">
-      <select class="inputForm form-control" name="query" autofocus="true">
+      <select class="inputForm form-control" name="queryClusterAZ" autofocus="true">
         <option value="cluster">Cluster</option>
         <option value="az">AZ</option>
+      </select>
+
+      <input class="inputForm form-control" type="text" name="inputForm" placeholder="Name of the Cluster (e.g. gru) or AZ (e.g. gru1)" autocomplete="off" required>
+
+      <select class="inputForm form-control" name="queryOption" autofocus="true">
+        <option value="allRecords">Hit "Search" for all records</option>
         <option value="serviceProvider">Service Provider / Peer</option>
         <option value="patchPanel">Patch-Panel</option>
         <option value="device">Device (e.g. gru1-br-cor-r3)</option>
         <option value="bandwidth">Bandwidth (Gbps)</option>
       </select>
 
-      <input class="inputForm form-control" type="text" name="inputForm" placeholder="Specify the parameter for your search" autocomplete="off" required>
+      <input class="inputForm form-control" type="text" name="queryParameter" placeholder="(Optional) Specify the filter for your search" autocomplete="off">
+
       <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="button">Search</button>
     </form>
   </div>
