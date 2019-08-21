@@ -67,7 +67,7 @@ app.get("/", function(req, res) {
   res.render("index.ejs");
 });
 
-
+// Render search.ejs when route "/search" receives a request.
 app.get("/search", function(req, res) {
   res.render("search.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
@@ -95,6 +95,8 @@ app.get("/update", function(req, res) {
   });
 });
 
+
+// When a serial ID is received at the "/updatepage" route, the app looks through the records to find the corresponding document.
 app.post("/updatepage", function(req, res) {
   const updateSerialID = req.body.inputUpdate;
   Xconn.find({
@@ -126,6 +128,7 @@ app.post("/result", function(req, res) {
         skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
       });
     });
+    // If queryOption is not allrecords, it means that the user has selected a specific option for their search.
   } else {
     query[queryOption] = queryParameter;
     Xconn.find(query, function(err, connection) {
@@ -160,6 +163,7 @@ app.post("/add", function(req, res) {
     var az = device.slice(0, 4);
   }
 
+  // Creates a circuit document with the values informed by the user.
   const circuit = new Xconn({
     _id: serialId,
     serviceprovider: serviceProvider.normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
@@ -185,34 +189,18 @@ app.post("/update", function(req, res) {
   const device = _.toLower(req.body.device);
   const interface = _.toLower(req.body.interface);
   const bandwidth = _.toLower(req.body.bandwidth);
-  // const query = {};
-  // query["_id"] = serialId;
-  // query["serviceprovider"] = serviceProvider;
-  // query["bandwidth"] = bandwidth;
-  // query["patchpanel"] = patchPanel;
-  // query["port"] = port;
-  // query["device"] = device;
-  // query["interface"] = interface;
+
 
   console.log(serialId, serviceProvider, patchPanel, port, device, interface, bandwidth);
 
+  // Looking for a document with a specific ID and updating its parameters
   Xconn.findOneAndUpdate({ _id:serialId }, {_id: serialId, serviceprovider: serviceProvider, bandwidth: bandwidth, patchpanel: patchPanel, port: port, device: device, interface: interface}, function(err, result){
     console.log("Record updated");
   });
+
+  res.redirect("/search");
 });
 
-
-
-
-
-// app.post("/get", function(req, res){
-//   const updateSerialID = req.body.inputUpdate;
-//   Xconn.find({_id: updateSerialID}, function(err, result){
-//     res.render("updatepage.ejs", {
-//       ckt: result
-//     });
-//   });
-// });
 
 
 // Opening the server for connections.
