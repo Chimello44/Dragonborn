@@ -20,6 +20,9 @@ mongoose.connect("mongodb://localhost:27017/cross-connect-circuits", {
   useNewUrlParser: true
 });
 
+mongoose.set('useFindAndModify', false);
+
+
 // Creating the Model Schema, a structure in which the documents will be saved.
 const circuitSchema = {
   _id: {
@@ -39,14 +42,14 @@ const circuitSchema = {
 
 
 const skyrimPhrases = [
-  "Believe, believe, the dragonborn comes",
+  "Believe, believe, the dragonborn comes...",
   "Dovahkiin, dovahkiin, naal ok zin los vahriin",
   "I used to be an adventurer like you, then I took an arrow to the knee.",
   "Down with Ulfric, the killer of kings! On the day of your death we will drink and we'll sing!",
   "What is better? To be born good, or to overcome your evil nature through great effort?",
   "My favorite drinking buddy! Let's get some mead.",
   "You do not even know our tongue, do you? Such arrogance, to dare take for yourself the name of Dovah!",
-  "We drink to our youth, for days come and gone. For the Age of Aggression is just about done",
+  "We drink to our youth, for days come and gone. For the Age of Aggression is just about done!",
   "We're the children of Skyrim, and we fight all our lives!"
 ];
 
@@ -78,9 +81,29 @@ app.get("/add", function(req, res) {
   });
 });
 
+app.get("/addcircuit", function(req, res) {
+  res.render("addcircuit.ejs");
+});
+
+app.get("/addpp", function(req, res) {
+  res.render("workinprogress.ejs");
+});
+
 app.get("/update", function(req, res) {
   res.render("update.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+  });
+});
+
+app.post("/updatepage", function(req, res) {
+  const updateSerialID = req.body.inputUpdate;
+  Xconn.find({
+    _id: updateSerialID
+  }, function(err, result) {
+    res.render("updatepage.ejs", {
+      connection: result,
+      skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+    });
   });
 });
 
@@ -130,7 +153,6 @@ app.post("/add", function(req, res) {
   const device = _.toLower(req.body.device);
   const interface = _.toLower(req.body.interface);
   const bandwidth = _.toLower(req.body.bandwidth);
-  // const az = _.toLower(req.body.az);
 
   if (device[5] == "-") {
     var az = device.slice(0, 5);
@@ -154,6 +176,43 @@ app.post("/add", function(req, res) {
 
   res.redirect("/add");
 });
+
+app.post("/update", function(req, res) {
+  const serialId = _.toLower(req.body.serialId);
+  const serviceProvider = _.toLower(req.body.serviceProvider);
+  const patchPanel = _.toLower(req.body.patchPanel);
+  const port = _.toLower(req.body.port);
+  const device = _.toLower(req.body.device);
+  const interface = _.toLower(req.body.interface);
+  const bandwidth = _.toLower(req.body.bandwidth);
+  // const query = {};
+  // query["_id"] = serialId;
+  // query["serviceprovider"] = serviceProvider;
+  // query["bandwidth"] = bandwidth;
+  // query["patchpanel"] = patchPanel;
+  // query["port"] = port;
+  // query["device"] = device;
+  // query["interface"] = interface;
+
+  console.log(serialId, serviceProvider, patchPanel, port, device, interface, bandwidth);
+
+  Xconn.findOneAndUpdate({ _id:serialId }, {_id: serialId, serviceprovider: serviceProvider, bandwidth: bandwidth, patchpanel: patchPanel, port: port, device: device, interface: interface}, function(err, result){
+    console.log("Record updated");
+  });
+});
+
+
+
+
+
+// app.post("/get", function(req, res){
+//   const updateSerialID = req.body.inputUpdate;
+//   Xconn.find({_id: updateSerialID}, function(err, result){
+//     res.render("updatepage.ejs", {
+//       ckt: result
+//     });
+//   });
+// });
 
 
 // Opening the server for connections.

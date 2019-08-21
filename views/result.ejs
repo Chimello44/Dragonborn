@@ -4,8 +4,6 @@
 
   <h2>Cross-Connect Records for <%= valueOfData %> </h2>
 
-  <h5 class="text-secondary"><%= skyrimPhrases %></h5>
-
   <% connection.forEach(function(ckt){ %>
 
   <table class="table table-dark tableHead btn-secondary">
@@ -39,6 +37,5 @@
   </table>
 
   <% }); %>
-</div>
 
-<%- include("footer"); -%>
+</div>

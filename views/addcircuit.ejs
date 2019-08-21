@@ -1,0 +1,57 @@
+<%- include("header"); -%>
+
+<div class="body">
+  <div class="content">
+
+    <h2>Fill in the circuit information.</h2>
+
+
+    <form action="/add" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
+      <div class="row">
+        <label for="">Circuit ID</label>
+        <input class="form-control" type="text" name="serialId" autocomplete="off" placeholder="ABC123456" required />
+      </div>
+
+      <div class="row">
+        <label for="">Service Provider / Peer</label>
+        <input class="form-control" type="text" name="serviceProvider" placeholder="Telefónica" autocomplete="off" required />
+      </div>
+
+      <div class="row">
+        <label for="">Bandwidth (Gbps)</label>
+        <input class="form-control" type=Number name="bandwidth" placeholder="100" autocomplete="off" required />
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="">Patch-Panel</label>
+          <input type="text" name="patchPanel" class="form-control" placeholder="PP45" autocomplete="off" required />
+        </div>
+
+        <div class="col">
+          <label for="">Patch-Panel Port</label>
+          <input type="text" name="port" class="form-control" placeholder="1/2" autocomplete="off" required />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="">Device (hostname)</label>
+          <input type="text" name="device" class="form-control" placeholder="gru1-br-cor-r3" autocomplete="off" required />
+        </div>
+
+        <div class="col">
+          <label for="">Device Interface</label>
+          <input type="text" name="interface" class="form-control" placeholder="et-0/0/11" autocomplete="off" required />
+        </div>
+      </div>
+      <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="submit">Add Circuit</button>
+    </form>
+    <div>
+
+      <a href="/add" class="searchButton btn btn-outline-secondary">Return</a>
+    </div>
+
+  </div>
+
+  <%- include("footer"); -%>

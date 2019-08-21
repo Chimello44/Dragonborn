@@ -4,11 +4,11 @@
 <div class="body">
   <div class="content">
     <h2>Add the cross-connection ID to edit its data.</h2>
-    <h5 class="text-secondary"><%= skyrimPhrases %></h5>    <form class="searchForm" action="/result" method="post">
-      <input class="inputForm form-control" type="text" name="inputForm" placeholder="Enter the cross-connection ID" autocomplete="off" required>
+    <h5 class="text-secondary"><%= skyrimPhrases %></h5>
+    <form class="searchForm" action="/updatepage" method="post">
+      <input class="inputForm form-control" type="text" name="inputUpdate" placeholder="Enter the cross-connection ID" autocomplete="off" required>
 
-
-      <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="button" href="/updatepage">Search</button>
+      <button class="searchButtonUpdate btn btn-secondary btn-lg btn-block" type="submit" name="updateButton" href="/updatepage">Search</button>
     </form>
   </div>
 </div>
