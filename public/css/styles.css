@@ -66,7 +66,7 @@
 }
 
 .tableMargin{
-  margin: 7% 0 1px;
+  margin: 7% 0 0;
 }
 
 table {
@@ -104,4 +104,8 @@ h2, h5{
 
 .returnButton{
   width: 0 auto;
+}
+
+body, footer, table{
+  margin: 0;
 }
