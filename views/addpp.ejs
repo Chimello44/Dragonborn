@@ -1,16 +1,16 @@
 <%- include("header"); -%>
 
 <div class="body">
-  <div class="content2">
+  <div class="body-content">
 
-    <h2>Fill in the form below to register a new Patch-Panel</h2>
+    <h2>Fill in the form below to add a new Patch-Panel.</h2>
 
     <form action="/add" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
-      <div>
-        <input class="inputForm form-control" type="text" name="serialId" placeholder="Cross-Connect ID" autocomplete="off" required />
+      <div class="row">
+        <input class="form-control" type="text" name="serialId" placeholder="Cross-Connect ID" autocomplete="off" required />
       </div>
 
-      <div>
+      <div class="row">
         <input class="inputForm form-control" type="text" name="serviceProvider" placeholder="Service Provider" autocomplete="off" required />
       </div>
 

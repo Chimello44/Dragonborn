@@ -1,8 +1,8 @@
 <%- include("header.ejs"); -%>
 <div class="body">
-  <div class="content">
+  <div class="body-content">
 
-    <h2>Change the values below and hit Submit</h2>
+    <h2 class="title">Change the values you need and hit "Submit Changes".</h2>
 
     <% connection.forEach(function(ckt){ %>
 
@@ -45,7 +45,7 @@
           <input type="text" name="interface" class="form-control" value="<%= ckt.interface %>" placeholder="et-0/0/11" autocomplete="off" required />
         </div>
       </div>
-      <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="button">Submit Changes</button>
+      <button class="row btn btn-secondary btn-lg btn-block" type="submit" name="button">Submit Changes</button>
     </form>
 
 
@@ -61,5 +61,4 @@
 
 
   </div>
-</div>
-<%- include("footer.ejs"); -%>
+  <%- include("footer.ejs"); -%>

@@ -1,18 +1,18 @@
 <%- include("header"); -%>
 
 <div class="body">
-  <div class="content">
+  <div class="body-content">
 
-    <h2>Fill in the form below to register a new circuit</h2>
+    <h2 class="title">Add a new circuit or new Patch-Panel.</h2>
 
-    <h5 class="text-secondary"><%= skyrimPhrases %></h5>
+    <p class="text-secondary"><%= skyrimPhrases %></p>
 
+    <div class="row">
+      <a href="/addcircuit" class="form-control btn btn-secondary btn-lg btn-block">Add Circuit</a>
+    </div>
     <div>
-
-        <a href="/addcircuit" class="addCircuitsPP inputForm form-control btn btn-secondary btn-lg btn-block">Add Circuit</a>
-        <a href="/addpp" class="addCircuitsPP inputForm form-control btn btn-secondary btn-lg btn-block">Add Patch-Panel</a>
-
+      <a href="/addpp" class="form-control btn btn-secondary btn-lg btn-block">Add Patch-Panel</a>
+    </div>
   </div>
-</div>
 
-<%- include("footer"); -%>
+  <%- include("footer"); -%>

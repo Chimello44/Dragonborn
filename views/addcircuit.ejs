@@ -1,9 +1,9 @@
 <%- include("header"); -%>
 
 <div class="body">
-  <div class="content">
+  <div class="body-content">
 
-    <h2>Fill in the circuit information.</h2>
+    <h2 class="title">Fill in the circuit information and hit "Submit".</h2>
 
 
     <form action="/add" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
@@ -45,7 +45,10 @@
           <input type="text" name="interface" class="form-control" placeholder="et-0/0/11" autocomplete="off" required />
         </div>
       </div>
-      <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="submit">Add Circuit</button>
+      <div class="row">
+        <button class="btn btn-secondary btn-lg btn-block" type="submit" name="submit">Submit</button>
+      </div>
+
     </form>
     <div>
 

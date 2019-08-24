@@ -2,9 +2,9 @@
 
 
 <div class="body">
-  <div class="content">
-    <h2>Select the type of information you want to search, then fell in the corresponding parameter.</h2>
-    <h5 class="text-secondary"><%= skyrimPhrases %></h5>
+  <div class="body-content">
+    <h2 class="title">Select the type of information you want to search, then fell in the corresponding parameter.</h2>
+    <p class="text-secondary"><%= skyrimPhrases %></p>
     <form action="/result" method="post">
       <div class="row">
         <label for="">Select either Cluster or AZ for your search:</label>
@@ -33,13 +33,15 @@
 
       <div class="row">
         <label for="">Type in the data you want to filter:</label>
-      <input class="form-control" type="text" name="queryParameter" placeholder="(Optional)" autocomplete="off">
+        <input class="form-control" type="text" name="queryParameter" placeholder="(Optional)" autocomplete="off">
+      </div>
 
       <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="button">Search</button>
     </form>
-
   </div>
-</div>
 
 
-<%- include("footer.ejs"); -%>
+
+
+
+  <%- include("footer.ejs"); -%>

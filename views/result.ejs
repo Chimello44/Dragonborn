@@ -1,9 +1,11 @@
 <%- include("header"); -%>
 
-<div class="container-fluid tableMargin">
+<div class="container-fluid">
+  <div class="title-result">
+    <h2>Cross-Connect Records for <%= valueOfData %> </h2>
+  </div>
 
-  <h2>Cross-Connect Records for <%= valueOfData %> </h2>
-  <table class="table table-dark tableHead btn-secondary">
+  <table class="table table-dark btn-secondary">
     <thead>
       <tr>
         <th scope="col">ID</th>
@@ -19,7 +21,7 @@
     </thead>
     <tbody>
 
-  <% connection.forEach(function(ckt){ %>
+      <% connection.forEach(function(ckt){ %>
 
 
       <tr>
@@ -34,8 +36,8 @@
         <td><%= ckt.cluster %></td>
       </tr>
 
-  <% }); %>
+      <% }); %>
 
     </tbody>
-</table>
+  </table>
 </div>
