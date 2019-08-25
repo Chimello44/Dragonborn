@@ -158,10 +158,10 @@ app.post("/add", function(req, res) {
   const bandwidth = _.toLower(req.body.bandwidth);
 
   if (device[5] == "-") {
-    var az = device.slice(0, 5);
-  } else {
-    var az = device.slice(0, 4);
-  }
+  var az = device.slice(0, 5);
+} else {
+  var az = device.slice(0, 4);
+}
 
   // Creates a circuit document with the values informed by the user.
   const circuit = new Xconn({
@@ -190,11 +190,16 @@ app.post("/update", function(req, res) {
   const interface = _.toLower(req.body.interface);
   const bandwidth = _.toLower(req.body.bandwidth);
 
+  if (device[5] == "-") {
+    var az = device.slice(0, 5);
+  } else {
+    var az = device.slice(0, 4);
+  }
 
   console.log(serialId, serviceProvider, patchPanel, port, device, interface, bandwidth);
 
   // Looking for a document with a specific ID and updating its parameters
-  Xconn.findOneAndUpdate({ _id:serialId }, {_id: serialId, serviceprovider: serviceProvider, bandwidth: bandwidth, patchpanel: patchPanel, port: port, device: device, interface: interface}, function(err, result){
+  Xconn.findOneAndUpdate({ _id:serialId }, {_id: serialId, serviceprovider: serviceProvider, bandwidth: bandwidth, patchpanel: patchPanel, port: port, device: device, interface: interface, az: az, cluster: device.slice(0, 3)}, function(err, result){
     console.log("Record updated");
   });
 
