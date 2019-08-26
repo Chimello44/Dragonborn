@@ -70,7 +70,6 @@ const patchpanelSchema = mongoose.Schema({
     type: Number,
     required: true
   },
-  connected: Number
 });
 
 const PatchPanel = mongoose.model("Panel", patchpanelSchema);
@@ -120,7 +119,9 @@ app.get("/update", function(req, res) {
 app.post("/updatepage", function(req, res) {
   const updateSerialID = req.body.inputUpdate;
 
-  Xconn.countDocuments({_id: updateSerialID}, function(err, serialCount){
+  Xconn.countDocuments({
+    _id: updateSerialID
+  }, function(err, serialCount) {
     if (serialCount == 0) {
       res.render("error.ejs", {
         error: "Cross-connect ID " + updateSerialID + " doesn't exist."
@@ -185,6 +186,8 @@ app.post("/add", function(req, res) {
   const interface = _.toLower(req.body.interface);
   const bandwidth = _.toLower(req.body.bandwidth);
 
+  const update = -1;
+
   if (device[5] == "-") {
     var az = device.slice(0, 5);
   } else {
@@ -192,15 +195,11 @@ app.post("/add", function(req, res) {
   }
 
   // Count the number of IDs found
-  PatchPanel.countDocuments({
-    _id: patchPanel
-  }, function(err, panel) {
+  PatchPanel.countDocuments({_id: patchPanel}, function(err, panel) {
     // Checks whether the DB has at least 1 entry of the ID.
     if (panel !== 0) {
 
-      Xconn.countDocuments({
-        _id: serialId
-      }, function(err, ckt) {
+      Xconn.countDocuments({_id: serialId}, function(err, ckt) {
         // Checks whether the ID is already in the DB.
         if (ckt == 0) {
           // Creates a circuit document with the values informed by the user.
@@ -217,6 +216,10 @@ app.post("/add", function(req, res) {
           });
 
           circuit.save();
+
+          PatchPanel.findOneAndUpdate({_id: "pp1"}, {$inc: {capacity: update}}, function(err, result){
+            console.log("PatchPanel updated");
+          });
 
           res.render("success.ejs", {
             success: "ID " + serialId + " registered"
@@ -238,6 +241,35 @@ app.post("/add", function(req, res) {
 });
 
 
+app.post("/addpp", function(req, res) {
+  const patchPanelId = _.toLower(req.body.patchPanelId);
+  const ports = req.body.ports;
+
+  PatchPanel.countDocuments({_id: patchPanelId}, function(err, ppCount) {
+    console.log(patchPanelId, ports);
+
+      if (ppCount == 0) {
+        const newPatchPanel = new PatchPanel({
+          _id: patchPanelId,
+          capacity: ports
+        });
+
+        newPatchPanel.save();
+
+        res.render("success.ejs", {
+          success: "Patch-Panel " + patchPanelId + " registered"
+        });
+
+      } else {
+        res.render("error.ejs", {
+          error: "Patch-Panel " + patchPanelId + " is already registered. Please check for any typos."
+        });
+      }
+  });
+});
+
+
+
 app.post("/update", function(req, res) {
   const serialId = _.toLower(req.body.serialId);
   const serviceProvider = _.toLower(req.body.serviceProvider);
@@ -255,16 +287,14 @@ app.post("/update", function(req, res) {
 
   console.log(serialId, serviceProvider, patchPanel, port, device, interface, bandwidth);
 
-  PatchPanel.countDocuments({_id: patchPanel}, function(err, ppCount){
+  PatchPanel.countDocuments({_id: patchPanel}, function(err, ppCount) {
     if (ppCount == 0) {
       res.render("error.ejs", {
         error: "Patch-Panel " + patchPanel + " is not registered. Please check for any typos or add a new Panel."
       })
     } else {
       // Looking for a document with a specific ID and updating its parameters
-      Xconn.findOneAndUpdate({
-        _id: serialId
-      }, {
+      Xconn.findOneAndUpdate({_id: serialId}, {
         _id: serialId,
         serviceprovider: serviceProvider,
         bandwidth: bandwidth,
