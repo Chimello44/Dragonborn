@@ -119,13 +119,22 @@ app.get("/update", function(req, res) {
 // When a serial ID is received at the "/updatepage" route, the app looks through the records to find the corresponding document.
 app.post("/updatepage", function(req, res) {
   const updateSerialID = req.body.inputUpdate;
-  Xconn.find({
-    _id: updateSerialID
-  }, function(err, result) {
-    res.render("updatepage.ejs", {
-      connection: result,
-      skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-    });
+
+  Xconn.countDocuments({_id: updateSerialID}, function(err, serialCount){
+    if (serialCount == 0) {
+      res.render("error.ejs", {
+        error: "Cross-connect ID " + updateSerialID + " doesn't exist."
+      });
+    } else {
+      Xconn.find({
+        _id: updateSerialID
+      }, function(err, result) {
+        res.render("updatepage.ejs", {
+          connection: result,
+          skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+        });
+      });
+    }
   });
 });
 
@@ -221,7 +230,7 @@ app.post("/add", function(req, res) {
       });
     } else {
       res.render("error.ejs", {
-        error: "No such Patch-Panel (" + patchPanel + ") registered. Please check for any typo or add a new Panel before registering a circuit on it."
+        error: "Patch-Panel " + patchPanel + " is not registered. Please check for any typos or add a new Panel before registering a circuit on it."
       });
     }
 
@@ -246,24 +255,34 @@ app.post("/update", function(req, res) {
 
   console.log(serialId, serviceProvider, patchPanel, port, device, interface, bandwidth);
 
-  // Looking for a document with a specific ID and updating its parameters
-  Xconn.findOneAndUpdate({
-    _id: serialId
-  }, {
-    _id: serialId,
-    serviceprovider: serviceProvider,
-    bandwidth: bandwidth,
-    patchpanel: patchPanel,
-    port: port,
-    device: device,
-    interface: interface,
-    az: az,
-    cluster: device.slice(0, 3)
-  }, function(err, result) {
-    console.log("Record updated");
-  });
+  PatchPanel.countDocuments({_id: patchPanel}, function(err, ppCount){
+    if (ppCount == 0) {
+      res.render("error.ejs", {
+        error: "Patch-Panel " + patchPanel + " is not registered. Please check for any typos or add a new Panel."
+      })
+    } else {
+      // Looking for a document with a specific ID and updating its parameters
+      Xconn.findOneAndUpdate({
+        _id: serialId
+      }, {
+        _id: serialId,
+        serviceprovider: serviceProvider,
+        bandwidth: bandwidth,
+        patchpanel: patchPanel,
+        port: port,
+        device: device,
+        interface: interface,
+        az: az,
+        cluster: device.slice(0, 3)
+      }, function(err, result) {
+        console.log("Record updated");
+      });
 
-  res.redirect("/search");
+      res.render("success.ejs", {
+        success: "ID " + serialId + " updated"
+      });
+    }
+  });
 });
 
 
