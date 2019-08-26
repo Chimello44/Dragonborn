@@ -22,25 +22,6 @@ mongoose.connect("mongodb://localhost:27017/cross-connect-circuits", {
 
 mongoose.set('useFindAndModify', false);
 
-
-// Creating the Model Schema, a structure in which the documents will be saved.
-const circuitSchema = {
-  _id: {
-    type: String,
-    required: true,
-    // unique: true
-  },
-  serviceprovider: String,
-  bandwidth: Number,
-  patchpanel: String,
-  port: String,
-  device: String,
-  interface: String,
-  az: String,
-  cluster: String
-};
-
-
 const skyrimPhrases = [
   "Believe, believe, the dragonborn comes...",
   "Dovahkiin, dovahkiin, naal ok zin los vahriin",
@@ -58,9 +39,45 @@ function randomSkyrimPhrase(max) {
 }
 
 
+
+// SCHEMAS AND MODELS
+
+// Creating the Model Schema, a structure in which the documents will be saved.
+const circuitSchema = mongoose.Schema({
+  _id: {
+    type: String,
+    required: true,
+    // unique: true
+  },
+  serviceprovider: String,
+  bandwidth: Number,
+  patchpanel: String,
+  port: String,
+  device: String,
+  interface: String,
+  az: String,
+  cluster: String
+});
 // Creating Model, which is the constructor method.
 const Xconn = mongoose.model("Connection", circuitSchema);
 
+const patchpanelSchema = mongoose.Schema({
+  _id: {
+    type: String,
+    required: true
+  },
+  capacity: {
+    type: Number,
+    required: true
+  },
+  connected: Number
+});
+
+const PatchPanel = mongoose.model("Panel", patchpanelSchema);
+
+
+
+// GET METHODS
 
 // This action is triggered when a request is received at the home route.
 app.get("/", function(req, res) {
@@ -86,7 +103,7 @@ app.get("/addcircuit", function(req, res) {
 });
 
 app.get("/addpp", function(req, res) {
-  res.render("workinprogress.ejs");
+  res.render("addpp.ejs");
 });
 
 app.get("/update", function(req, res) {
@@ -95,6 +112,9 @@ app.get("/update", function(req, res) {
   });
 });
 
+
+
+// POST METHODS
 
 // When a serial ID is received at the "/updatepage" route, the app looks through the records to find the corresponding document.
 app.post("/updatepage", function(req, res) {
@@ -147,7 +167,6 @@ app.post("/result", function(req, res) {
 });
 
 
-
 app.post("/add", function(req, res) {
   const serialId = _.toLower(req.body.serialId);
   const serviceProvider = _.toLower(req.body.serviceProvider);
@@ -158,28 +177,57 @@ app.post("/add", function(req, res) {
   const bandwidth = _.toLower(req.body.bandwidth);
 
   if (device[5] == "-") {
-  var az = device.slice(0, 5);
-} else {
-  var az = device.slice(0, 4);
-}
+    var az = device.slice(0, 5);
+  } else {
+    var az = device.slice(0, 4);
+  }
 
-  // Creates a circuit document with the values informed by the user.
-  const circuit = new Xconn({
-    _id: serialId,
-    serviceprovider: serviceProvider.normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
-    bandwidth: bandwidth,
-    patchpanel: patchPanel,
-    port: port,
-    device: device,
-    interface: interface,
-    az: az,
-    cluster: device.slice(0, 3)
+  // Count the number of IDs found
+  PatchPanel.countDocuments({
+    _id: patchPanel
+  }, function(err, panel) {
+    // Checks whether the DB has at least 1 entry of the ID.
+    if (panel !== 0) {
+
+      Xconn.countDocuments({
+        _id: serialId
+      }, function(err, ckt) {
+        // Checks whether the ID is already in the DB.
+        if (ckt == 0) {
+          // Creates a circuit document with the values informed by the user.
+          const circuit = new Xconn({
+            _id: serialId,
+            serviceprovider: serviceProvider.normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
+            bandwidth: bandwidth,
+            patchpanel: patchPanel,
+            port: port,
+            device: device,
+            interface: interface,
+            az: az,
+            cluster: device.slice(0, 3)
+          });
+
+          circuit.save();
+
+          res.render("success.ejs", {
+            success: "ID " + serialId + " registered"
+          });
+
+        } else {
+          res.render("error.ejs", {
+            error: "ID " + serialId + " already exists. Please check for any typos."
+          });
+        }
+      });
+    } else {
+      res.render("error.ejs", {
+        error: "No such Patch-Panel (" + patchPanel + ") registered. Please check for any typo or add a new Panel before registering a circuit on it."
+      });
+    }
+
   });
-
-  circuit.save();
-
-  res.redirect("/add");
 });
+
 
 app.post("/update", function(req, res) {
   const serialId = _.toLower(req.body.serialId);
@@ -199,7 +247,19 @@ app.post("/update", function(req, res) {
   console.log(serialId, serviceProvider, patchPanel, port, device, interface, bandwidth);
 
   // Looking for a document with a specific ID and updating its parameters
-  Xconn.findOneAndUpdate({ _id:serialId }, {_id: serialId, serviceprovider: serviceProvider, bandwidth: bandwidth, patchpanel: patchPanel, port: port, device: device, interface: interface, az: az, cluster: device.slice(0, 3)}, function(err, result){
+  Xconn.findOneAndUpdate({
+    _id: serialId
+  }, {
+    _id: serialId,
+    serviceprovider: serviceProvider,
+    bandwidth: bandwidth,
+    patchpanel: patchPanel,
+    port: port,
+    device: device,
+    interface: interface,
+    az: az,
+    cluster: device.slice(0, 3)
+  }, function(err, result) {
     console.log("Record updated");
   });
 
