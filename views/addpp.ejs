@@ -8,12 +8,17 @@
     <form action="/addpp" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
       <div class="row">
           <label for="">Patch-Panel ID:</label>
-          <input type="text" name="patchPanelId" class="form-control" placeholder="Patch-Panel ID" autocomplete="off" required>
+          <input type="text" name="patchPanelId" class="form-control" placeholder="Patch-Panel ID" autocomplete="off" autofocus="true" required>
       </div>
 
       <div class="row">
-          <label for="">Amount of pairs (1 port = 1/2):</label>
-          <input class="form-control" type=Number name="ports" placeholder="Number of available ports" autocomplete="off" required />
+          <label for="">Quantity of ports (1 port = 2 pairs):</label>
+          <input class="form-control" type=Number name="capacity" placeholder="Number of available ports" autocomplete="off" required />
+      </div>
+
+      <div class="row">
+          <label for="">Enter the AZ:</label>
+          <input type="text" name="az" class="form-control" placeholder="AZ (e.g. gru1)" autocomplete="off" required>
       </div>
 
       <div>

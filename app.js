@@ -22,25 +22,6 @@ mongoose.connect("mongodb://localhost:27017/cross-connect-circuits", {
 
 mongoose.set('useFindAndModify', false);
 
-
-// Creating the Model Schema, a structure in which the documents will be saved.
-const circuitSchema = {
-  _id: {
-    type: String,
-    required: true,
-    // unique: true
-  },
-  serviceprovider: String,
-  bandwidth: Number,
-  patchpanel: String,
-  port: String,
-  device: String,
-  interface: String,
-  az: String,
-  cluster: String
-};
-
-
 const skyrimPhrases = [
   "Believe, believe, the dragonborn comes...",
   "Dovahkiin, dovahkiin, naal ok zin los vahriin",
@@ -57,9 +38,223 @@ function randomSkyrimPhrase(max) {
   return Math.floor(Math.random() * max);
 }
 
+// const clusters = [
+//   "ARN", "BJS", "BOM", "CDG", "CMH", "DCA", "DUB", "FRA", "GIG",  "IAD", "ICN", "KIX", "HKG", "LHR", "LCK", "LUX", "MXP", "NRT", "OSU", "PDT", "PDX", "PEK", "SEA", "SFO", "SIN", "SYD", "YUL", "ZHY"
+// ];
+//
+// const sites = ["gru1", "gru2", "gru3", "iad50"];
 
-// Creating Model, which is the constructor method.
-const Xconn = mongoose.model("Connection", circuitSchema);
+
+
+
+
+// Creating the Model Schema, the structure in which the documents will be saved.
+const circuitSchema = new mongoose.Schema({
+  _circuit: {
+    type: String,
+    required: true,
+    // unique: true
+  },
+  serviceprovider: String,
+  bandwidth: Number,
+  device: String,
+  interface: String,
+  patchpanel: String,
+  patchpanelport: Number,
+  az: String,
+  cluster: String
+});
+
+const patchPanelSchema = new mongoose.Schema({
+  _patchpanel: {
+    type: String,
+    required: true,
+    // index: true
+  },
+  capacity: Number,
+  az: String,
+  cluster: String
+});
+
+const azSchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true
+  },
+  cluster: String
+});
+
+const clusterSchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true
+  }
+});
+
+
+
+
+// Creating  the Model, which is the constructor method.
+const Xconn = mongoose.model("Circuit", circuitSchema);
+
+const PatchPanel = mongoose.model("Panel", patchPanelSchema);
+
+const Az = mongoose.model("Site", azSchema);
+
+const Cluster = mongoose.model("Cluster", clusterSchema);
+
+
+
+
+
+
+
+
+
+
+app.post("/addAz", function(req, res){
+  const az = _.toLower(req.body.az);
+  const cluster = _.toLower(az.slice(0,3));
+
+  Cluster.countDocuments({_id: _.toLower(az.slice(0,3))}, function(err, foundCluster){
+    if (foundCluster === 1) {
+
+      Az.countDocuments({_id: _.toLower(az)}, function(err, foundAz){
+        if (foundAz === 0) {
+          const newAz = new Az({
+            _id: _.toLower(az),
+            cluster: _.toLower(az.slice(0,3))
+          });
+          newAz.save();
+          console.log(_.toUpper(az) + " added to database.");
+
+        } else if (foundAz === 1) {
+          console.log(_.toUpper(az) + " already created.");
+
+        } else {
+          console.log(_.toUpper(az) + " duplicated.");
+        }
+      });
+
+    } else if (foundCluster === 0) {
+      const newCluster = new Cluster({
+        _id: _.toLower(cluster)
+      });
+      newCluster.save();
+      console.log(_.toUpper(cluster) + " created.");
+
+      const newAz = new Az({
+        _id: _.toLower(az),
+        cluster: _.toLower(az.slice(0,3))
+      });
+      newAz.save();
+      console.log(_.toUpper(az) + " added to database.");
+    }
+  });
+});
+
+
+
+
+
+app.post("/addcircuit", function(req, res){
+  const serialId = _.toLower(req.body.serialId);
+  const serviceProvider = _.toLower(req.body.serviceProvider).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const bandwidth = req.body.bandwidth;
+  const patchPanel = _.toLower(req.body.patchPanel);
+  const patchPanelPort = _.toLower(req.body.patchPanelPort);
+  const device = _.toLower(req.body.device);
+  const interface = _.toLower(req.body.interface);
+
+  const cluster = device.slice(0,3);
+
+  if (device[5] === "-") {
+    var az = _.toLower(device.slice(0,5));
+  } else {
+    var az = _.toLower(device.slice(0,4));
+  }
+
+  Az.countDocuments({_id: az}, function(err, foundAz){
+    if (foundAz === 1) {
+      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel){
+        if (foundPatchPanel === 1) {
+          PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, doc){
+            // console.log(doc.capacity);
+            if (doc.capacity > 0) {
+              Xconn.countDocuments({_circuit: serialId, az: az}, function(err, doc){
+                if (doc === 0) {
+                  const newCircuit = new Xconn({
+                    _circuit: serialId,
+                    serviceprovider: serviceProvider,
+                    bandwidth: bandwidth,
+                    patchpanel: patchPanel,
+                    patchpanelport: patchPanelPort,
+                    device: device,
+                    interface: interface,
+                    az: az,
+                    cluster: device.slice(0,3)
+                  });
+                  newCircuit.save();
+                  PatchPanel.update({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, {multi: true});
+                  PatchPanel.findOne({az: az, _patchpanel: patchPanel}, function(err, doc){
+                    console.log(doc.capacity);
+                  });
+                  console.log(newCircuit._circuit + ": circuit saved for " + newCircuit.az);
+                } else {
+                  console.log("Circuit already registered.");
+                }
+              });
+
+            } else {
+              console.log("No capacity to deploy new circuits.");
+            }
+          });
+        } else {
+          console.log(patchPanel + " is not registered for " + az);
+        }
+      });
+    } else {
+      console.log(az + " is not registered.");
+    }
+  });
+
+});
+
+
+
+app.post("/addpp", function(req, res){
+  const patchPanel = _.toLower(req.body.patchPanelId);
+  const capacity = req.body.capacity;
+  const az = _.toLower(req.body.az);
+  const cluster = az.slice(0,3);
+
+  Az.countDocuments({_id: az}, function(err, foundAz){
+    if (foundAz === 0) {
+      console.log("There's no AZ for this patch-panel.");
+    } else if (foundAz === 1) {
+      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel){
+        if (foundPatchPanel === 0) {
+          const newPatchPanel = new PatchPanel({
+            _patchpanel: patchPanel,
+            capacity: capacity,
+            az: az,
+            cluster: cluster
+          });
+          newPatchPanel.save();
+          console.log(patchPanel + " created for " + az);
+        } else {
+          console.log("Patch-Panel already exists for " + az);
+        }
+      });
+    }
+  });
+});
+
+
+
+
+
+
 
 
 // This action is triggered when a request is received at the home route.
@@ -86,7 +281,7 @@ app.get("/addcircuit", function(req, res) {
 });
 
 app.get("/addpp", function(req, res) {
-  res.render("workinprogress.ejs");
+  res.render("addpp.ejs");
 });
 
 app.get("/update", function(req, res) {
@@ -94,6 +289,43 @@ app.get("/update", function(req, res) {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
 });
+
+app.get("/addaz", function(req, res){
+  res.render("addaz.ejs");
+});
+
+
+
+
+
+app.post("/add", function(req, res) {
+  const serialId = _.toLower(req.body.serialId);
+  const serviceProvider = _.toLower(req.body.serviceProvider);
+  const patchPanel = _.toLower(req.body.patchPanel);
+  const port = _.toLower(req.body.port);
+  const device = _.toLower(req.body.device);
+  const interface = _.toLower(req.body.interface);
+  const bandwidth = _.toLower(req.body.bandwidth);
+  const cluster = device.slice(0, 3);
+
+  if (device[5] == "-") {
+    var az = device.slice(0, 5);
+  } else {
+    var az = device.slice(0, 4);
+  }
+
+  Cluster.findOne({
+    _id: cluster
+  }, function(err, foundCluster) {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log("Cluster: " + foundCluster);
+    }
+  })
+});
+
+
 
 
 // When a serial ID is received at the "/updatepage" route, the app looks through the records to find the corresponding document.
@@ -108,6 +340,8 @@ app.post("/updatepage", function(req, res) {
     });
   });
 });
+
+
 
 
 // Search results.
@@ -147,64 +381,6 @@ app.post("/result", function(req, res) {
 });
 
 
-
-app.post("/add", function(req, res) {
-  const serialId = _.toLower(req.body.serialId);
-  const serviceProvider = _.toLower(req.body.serviceProvider);
-  const patchPanel = _.toLower(req.body.patchPanel);
-  const port = _.toLower(req.body.port);
-  const device = _.toLower(req.body.device);
-  const interface = _.toLower(req.body.interface);
-  const bandwidth = _.toLower(req.body.bandwidth);
-
-  if (device[5] == "-") {
-  var az = device.slice(0, 5);
-} else {
-  var az = device.slice(0, 4);
-}
-
-  // Creates a circuit document with the values informed by the user.
-  const circuit = new Xconn({
-    _id: serialId,
-    serviceprovider: serviceProvider.normalize("NFD").replace(/[\u0300-\u036f]/g, ""),
-    bandwidth: bandwidth,
-    patchpanel: patchPanel,
-    port: port,
-    device: device,
-    interface: interface,
-    az: az,
-    cluster: device.slice(0, 3)
-  });
-
-  circuit.save();
-
-  res.redirect("/add");
-});
-
-app.post("/update", function(req, res) {
-  const serialId = _.toLower(req.body.serialId);
-  const serviceProvider = _.toLower(req.body.serviceProvider);
-  const patchPanel = _.toLower(req.body.patchPanel);
-  const port = _.toLower(req.body.port);
-  const device = _.toLower(req.body.device);
-  const interface = _.toLower(req.body.interface);
-  const bandwidth = _.toLower(req.body.bandwidth);
-
-  if (device[5] == "-") {
-    var az = device.slice(0, 5);
-  } else {
-    var az = device.slice(0, 4);
-  }
-
-  console.log(serialId, serviceProvider, patchPanel, port, device, interface, bandwidth);
-
-  // Looking for a document with a specific ID and updating its parameters
-  Xconn.findOneAndUpdate({ _id:serialId }, {_id: serialId, serviceprovider: serviceProvider, bandwidth: bandwidth, patchpanel: patchPanel, port: port, device: device, interface: interface, az: az, cluster: device.slice(0, 3)}, function(err, result){
-    console.log("Record updated");
-  });
-
-  res.redirect("/search");
-});
 
 
 

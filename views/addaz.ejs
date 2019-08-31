@@ -1,0 +1,25 @@
+<%- include("header"); -%>
+
+
+<div class="body">
+  <div class="body-content">
+
+    <h2 class="title">Fill in the form below to add a new Patch-Panel.</h2>
+
+    <form action="/addaz" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
+      <div class="row">
+          <label for="">Enter the AZ:</label>
+          <input type="text" name="az" class="form-control" placeholder="AZ (e.g. gru1)" autocomplete="off" autofocus="true" required>
+      </div>
+
+      <div>
+        <button class="row btn btn-secondary btn-lg btn-block" type="submit">Add</button>
+      </div>
+    </form>
+
+    <a href="/add" class="btn btn-outline-secondary">Return</a>
+
+  </div>
+
+
+<%- include("footer"); -%>
