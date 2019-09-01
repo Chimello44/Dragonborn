@@ -2,6 +2,10 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const _ = require("lodash");
+const autoIncrement = require("mongoose-auto-increment");
+
+var async = require("async");
+
 const app = express();
 
 // Creating the engine views to render EJS files from "views" folder.
@@ -112,6 +116,7 @@ const Cluster = mongoose.model("Cluster", clusterSchema);
 
 
 
+
 app.post("/addAz", function(req, res){
   const az = _.toLower(req.body.az);
   const cluster = _.toLower(az.slice(0,3));
@@ -195,11 +200,10 @@ app.post("/addcircuit", function(req, res){
                     cluster: device.slice(0,3)
                   });
                   newCircuit.save();
-                  PatchPanel.update({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, {multi: true});
-                  PatchPanel.findOne({az: az, _patchpanel: patchPanel}, function(err, doc){
-                    console.log(doc.capacity);
-                  });
                   console.log(newCircuit._circuit + ": circuit saved for " + newCircuit.az);
+                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, { $inc: {capacity: -1} }, function(err, doc){
+                    console.log("Current capacity for " + newCircuit.patchpanel + " in " + newCircuit.az + " is: " + doc.capacity);
+                  });
                 } else {
                   console.log("Circuit already registered.");
                 }
@@ -254,6 +258,35 @@ app.post("/addpp", function(req, res){
 
 
 
+app.post("/update", function(req, res){
+  const bandwidth = req.body.bandwidth;
+  const patchPanel = req.body.patchPanel;
+  const port = req.body.port;
+  const device = req.body.device;
+  const interface = req.body.interface;
+
+  Xconn.findOneAndUpdate({})
+});
+
+
+
+
+
+// When a serial ID is received at the "/updatepage" route, the app looks through the records to find the corresponding document.
+app.post("/updatecircuit", function(req, res) {
+  const updateSerialID = req.body.inputUpdate;
+  console.log(updateSerialID);
+  Xconn.find({
+    _circuit: updateSerialID
+  }, function(err, result) {
+    res.render("updatecircuit.ejs", {
+      connection: result,
+      skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+    });
+  });
+});
+
+
 
 
 
@@ -298,48 +331,37 @@ app.get("/addaz", function(req, res){
 
 
 
-app.post("/add", function(req, res) {
-  const serialId = _.toLower(req.body.serialId);
-  const serviceProvider = _.toLower(req.body.serviceProvider);
-  const patchPanel = _.toLower(req.body.patchPanel);
-  const port = _.toLower(req.body.port);
-  const device = _.toLower(req.body.device);
-  const interface = _.toLower(req.body.interface);
-  const bandwidth = _.toLower(req.body.bandwidth);
-  const cluster = device.slice(0, 3);
-
-  if (device[5] == "-") {
-    var az = device.slice(0, 5);
-  } else {
-    var az = device.slice(0, 4);
-  }
-
-  Cluster.findOne({
-    _id: cluster
-  }, function(err, foundCluster) {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("Cluster: " + foundCluster);
-    }
-  })
-});
-
-
+// app.post("/add", function(req, res) {
+//   const serialId = _.toLower(req.body.serialId);
+//   const serviceProvider = _.toLower(req.body.serviceProvider);
+//   const patchPanel = _.toLower(req.body.patchPanel);
+//   const port = _.toLower(req.body.port);
+//   const device = _.toLower(req.body.device);
+//   const interface = _.toLower(req.body.interface);
+//   const bandwidth = _.toLower(req.body.bandwidth);
+//   const cluster = device.slice(0, 3);
+//
+//   if (device[5] == "-") {
+//     var az = device.slice(0, 5);
+//   } else {
+//     var az = device.slice(0, 4);
+//   }
+//
+//   Cluster.findOne({
+//     _id: cluster
+//   }, function(err, foundCluster) {
+//     if (err) {
+//       console.log(err);
+//     } else {
+//       console.log("Cluster: " + foundCluster);
+//     }
+//   })
+// });
 
 
-// When a serial ID is received at the "/updatepage" route, the app looks through the records to find the corresponding document.
-app.post("/updatepage", function(req, res) {
-  const updateSerialID = req.body.inputUpdate;
-  Xconn.find({
-    _id: updateSerialID
-  }, function(err, result) {
-    res.render("updatepage.ejs", {
-      connection: result,
-      skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-    });
-  });
-});
+
+
+
 
 
 
