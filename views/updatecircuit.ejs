@@ -7,6 +7,7 @@
     <% connection.forEach(function(ckt){ %>
 
     <form action="/update" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
+      <input type="hidden" name="page" value="updatecircuit">
       <div class="row">
         <label for="">Circuit ID</label>
         <input class="form-control" type="text" name="serialId" value="<%= ckt._circuit %>" placeholder="ABC123456" autocomplete="off" contenteditable="false" readonly />
@@ -30,7 +31,7 @@
 
         <div class="col">
           <label for="">Patch-Panel Port</label>
-          <input type="text" name="port" class="form-control" value="<%= ckt.port %>" placeholder="1/2" autocomplete="off" required />
+          <input type="text" name="port" class="form-control" value="<%= ckt.patchpanelport %>" placeholder="1/2" autocomplete="off" required />
         </div>
       </div>
 
