@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const ejs = require("ejs");
 const _ = require("lodash");
 const autoIncrement = require("mongoose-auto-increment");
 
@@ -109,13 +110,13 @@ const Cluster = mongoose.model("Cluster", clusterSchema);
 
 
 
-function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate){
+function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate, res){
   Az.countDocuments({_id: az}, function(err, foundAz){
     if (foundAz === 1) {
       PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel){
         if (foundPatchPanel === 1) {
           PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, doc){
-            // console.log(doc.capacity);
+
             if ((doc.capacity > 0) && (actionAddUpdate === "addcircuit")){
               Xconn.countDocuments({_circuit: serialId, az: az}, function(err, doc){
                 if (doc === 0) {
@@ -131,18 +132,21 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                     cluster: device.slice(0,3)
                   });
                   newCircuit.save();
-                  console.log(newCircuit._circuit + ": circuit saved for " + newCircuit.az);
-                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, { $inc: {capacity: -1} }, function(err, doc){
-                    console.log("Current capacity for " + newCircuit.patchpanel + " in " + newCircuit.az + " is: " + doc.capacity);
+                  res.render("success.ejs", {
+                    success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az),
+                    route: "/addcircuit"
                   });
+                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, { $inc: {capacity: -1} }, function(err, doc){});
                 } else {
-                  console.log("Circuit already registered.");
+                  res.render("fail.ejs", {
+                    fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database.",
+                    route: "/addcircuit"
+                  });
                 }
               });
 
             } else if (actionAddUpdate == "updatecircuit") {
-              // PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel){
-                // if (foundPatchPanel === 1) {
+                if (foundPatchPanel === 1) {
                   Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
                     _circuit: serialId,
                     serviceprovider: serviceProvider,
@@ -155,23 +159,37 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                     cluster: device.slice(0,3)
                   }, function(err, doc){
                     console.log(doc._circuit + " updated.");
+                    res.render("success.ejs", {
+                      success: "Circuit ID " + _.toUpper(serialId) + " updated.",
+                      route: "/update"
+                    });
                   });
-                // } else {
-                //   console.log(patchPanel + " is not registered for " + az);
-                // }
-              // });
-
+                } else {
+                  res.render("fail.ejs", {
+                    success: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+                    route: "/update"
+                  })
+                }
 
             } else {
-              console.log("No capacity to deploy new circuits.");
+              res.render("fail.ejs", {
+                fail: "No capacity to deploy new circuits on panel " + patchPanel,
+                route: "/add"
+              });
             }
           });
         } else {
-          console.log(patchPanel + " is not registered for " + az);
+          res.render("fail.ejs", {
+            fail: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+            route: "/update"
+          });
         }
       });
     } else {
-      console.log(az + " is not registered.");
+      res.render("fail.ejs", {
+        fail: _.toUpper(az) + " is not registered.",
+        route: "/add"
+      });
     }
   });
 }
@@ -179,9 +197,119 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
 
 
 
+// POST METHODS.
+
+// Search results route.
+app.post("/result", function(req, res) {
+  const typeOfData = _.toLower(req.body.queryClusterAZ);
+  const valueOfData = _.toLower(req.body.inputForm).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const queryOption = _.toLower(req.body.queryOption);
+  const queryParameter = _.toLower(req.body.queryParameter);
+  const query = {};
+  const searchTitle = _.toUpper(valueOfData);
+  query[typeOfData] = valueOfData;
+  if (queryOption == "allrecords") {
+    Xconn.find(query, function(err, connection) {
+      res.render("result.ejs", {
+        connection: connection,
+        valueOfData: searchTitle,
+        queryClusterAZ: typeOfData,
+        skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+      });
+    });
+    // If queryOption is not allrecords, it means that the user has selected a specific option for their search.
+  } else {
+    query[queryOption] = queryParameter;
+    Xconn.find(query, function(err, connection) {
+      res.render("result.ejs", {
+        connection: connection,
+        valueOfData: searchTitle,
+        queryClusterAZ: typeOfData,
+        skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+      });
+    });
+
+    const searchTitle = _.toUpper(valueOfData)
+    console.log(query);
+    console.log(typeOfData, valueOfData, queryParameter);
+  }
+});
 
 
 
+
+// Add circuit route.
+app.post("/addcircuit", function(req, res){
+  const serialId = _.toLower(req.body.serialId);
+  const serviceProvider = _.toLower(req.body.serviceProvider).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const bandwidth = req.body.bandwidth;
+  const patchPanel = _.toLower(req.body.patchPanel);
+  const patchPanelPort = _.toLower(req.body.patchPanelPort);
+  const device = _.toLower(req.body.device);
+  const interface = _.toLower(req.body.interface);
+
+  const cluster = device.slice(0,3);
+
+  if (device[5] === "-") {
+    var az = _.toLower(device.slice(0,5));
+  } else {
+    var az = _.toLower(device.slice(0,4));
+  }
+
+  const actionAddUpdate = req.body.page;
+
+  // function Add Circuit
+  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate, res);
+
+});
+
+
+
+
+// Add Patch-Panel route.
+app.post("/addpp", function(req, res){
+  const patchPanel = _.toLower(req.body.patchPanelId);
+  const capacity = req.body.capacity;
+  const az = _.toLower(req.body.az);
+  const cluster = az.slice(0,3);
+
+  Az.countDocuments({_id: az}, function(err, foundAz){
+    if (foundAz === 0) {
+      res.render("fail.ejs", {
+        fail: "There's no AZ for panel " + _.toUpper(patchPanel),
+        route: "/add"
+      });
+    } else if (foundAz === 1) {
+      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel){
+        if (foundPatchPanel === 0) {
+          const newPatchPanel = new PatchPanel({
+            _patchpanel: patchPanel,
+            capacity: capacity,
+            az: az,
+            cluster: cluster
+          });
+          newPatchPanel.save();
+          console.log(patchPanel + " created for " + az);
+          res.render("success.ejs", {
+            success: _.toUpper(patchPanel) + " created for " + _.toUpper(az),
+            route: "/add"
+          });
+        } else {
+          console.log("Patch-Panel already exists for " + az);
+          res.render("success.ejs", {
+            success: "Panel " + _.toUpper(patchPanel) + " already exists for " + _.toUpper(az) + ".",
+            route: "/add"
+          });
+        }
+      });
+    }
+  });
+});
+
+
+
+
+// Add AZ route.
 app.post("/addAz", function(req, res){
   const az = _.toLower(req.body.az);
   const cluster = _.toLower(az.slice(0,3));
@@ -226,67 +354,23 @@ app.post("/addAz", function(req, res){
 
 
 
-
-app.post("/addcircuit", function(req, res){
-  const serialId = _.toLower(req.body.serialId);
-  const serviceProvider = _.toLower(req.body.serviceProvider).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const bandwidth = req.body.bandwidth;
-  const patchPanel = _.toLower(req.body.patchPanel);
-  const patchPanelPort = _.toLower(req.body.patchPanelPort);
-  const device = _.toLower(req.body.device);
-  const interface = _.toLower(req.body.interface);
-
-  const cluster = device.slice(0,3);
-
-  if (device[5] === "-") {
-    var az = _.toLower(device.slice(0,5));
-  } else {
-    var az = _.toLower(device.slice(0,4));
-  }
-
-  const actionAddUpdate = req.body.page;
-
-  // function Add Circuit
-  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate);
-
-  console.log("req.body results:\n" + req.body.page);
-
-});
-
-
-
-app.post("/addpp", function(req, res){
-  const patchPanel = _.toLower(req.body.patchPanelId);
-  const capacity = req.body.capacity;
-  const az = _.toLower(req.body.az);
-  const cluster = az.slice(0,3);
-
-  Az.countDocuments({_id: az}, function(err, foundAz){
-    if (foundAz === 0) {
-      console.log("There's no AZ for this patch-panel.");
-    } else if (foundAz === 1) {
-      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel){
-        if (foundPatchPanel === 0) {
-          const newPatchPanel = new PatchPanel({
-            _patchpanel: patchPanel,
-            capacity: capacity,
-            az: az,
-            cluster: cluster
-          });
-          newPatchPanel.save();
-          console.log(patchPanel + " created for " + az);
-        } else {
-          console.log("Patch-Panel already exists for " + az);
-        }
-      });
-    }
+// Collect the serial ID from the circuit that will be updated.
+app.post("/updatecircuit", function(req, res) {
+  const updateSerialID = req.body.inputUpdate;
+  Xconn.find({
+    _circuit: updateSerialID
+  }, function(err, result) {
+    res.render("updatecircuit.ejs", {
+      connection: result,
+      skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+    });
   });
 });
 
 
 
 
-
+// Update circuit route.
 app.post("/update", function(req, res){
   const serialId = _.toLower(req.body.serialId);
   const serviceProvider = _.toLower(req.body.serviceProvider);
@@ -306,29 +390,13 @@ app.post("/update", function(req, res){
 
   const actionAddUpdate = req.body.page;
 
-  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate);
+  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate, res);
 });
 
 
 
 
-
-// When a serial ID is received at the "/updatepage" route, the app looks through the records to find the corresponding document.
-app.post("/updatecircuit", function(req, res) {
-  const updateSerialID = req.body.inputUpdate;
-  Xconn.find({
-    _circuit: updateSerialID
-  }, function(err, result) {
-    res.render("updatecircuit.ejs", {
-      connection: result,
-      skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-    });
-  });
-});
-
-
-
-
+// GET METHODS
 
 // This action is triggered when a request is received at the home route.
 app.get("/", function(req, res) {
@@ -370,83 +438,6 @@ app.get("/addaz", function(req, res){
 
 
 
-
-// app.post("/add", function(req, res) {
-//   const serialId = _.toLower(req.body.serialId);
-//   const serviceProvider = _.toLower(req.body.serviceProvider);
-//   const patchPanel = _.toLower(req.body.patchPanel);
-//   const port = _.toLower(req.body.port);
-//   const device = _.toLower(req.body.device);
-//   const interface = _.toLower(req.body.interface);
-//   const bandwidth = _.toLower(req.body.bandwidth);
-//   const cluster = device.slice(0, 3);
-//
-//   if (device[5] == "-") {
-//     var az = device.slice(0, 5);
-//   } else {
-//     var az = device.slice(0, 4);
-//   }
-//
-//   Cluster.findOne({
-//     _id: cluster
-//   }, function(err, foundCluster) {
-//     if (err) {
-//       console.log(err);
-//     } else {
-//       console.log("Cluster: " + foundCluster);
-//     }
-//   })
-// });
-
-
-
-
-
-
-
-
-
-// Search results.
-app.post("/result", function(req, res) {
-  const typeOfData = _.toLower(req.body.queryClusterAZ);
-  const valueOfData = _.toLower(req.body.inputForm).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const queryOption = _.toLower(req.body.queryOption);
-  const queryParameter = _.toLower(req.body.queryParameter);
-  const query = {};
-  const searchTitle = _.toUpper(valueOfData);
-  query[typeOfData] = valueOfData;
-  if (queryOption == "allrecords") {
-    Xconn.find(query, function(err, connection) {
-      res.render("result.ejs", {
-        connection: connection,
-        valueOfData: searchTitle,
-        queryClusterAZ: typeOfData,
-        skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-      });
-    });
-    // If queryOption is not allrecords, it means that the user has selected a specific option for their search.
-  } else {
-    query[queryOption] = queryParameter;
-    Xconn.find(query, function(err, connection) {
-      res.render("result.ejs", {
-        connection: connection,
-        valueOfData: searchTitle,
-        queryClusterAZ: typeOfData,
-        skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-      });
-    });
-
-    const searchTitle = _.toUpper(valueOfData)
-    console.log(query);
-    console.log(typeOfData, valueOfData, queryParameter);
-  }
-});
-
-
-
-
-
-// Opening the server for connections.
 app.listen(3000, function() {
   console.log("Server running on port 3000");
 });
