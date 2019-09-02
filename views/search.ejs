@@ -6,17 +6,17 @@
     <h2 class="title">Select the type of information you want to search, then fell in the corresponding parameter.</h2>
     <p class="text-secondary"><%= skyrimPhrases %></p>
     <form action="/result" method="post">
-      <div class="row">
+      <!-- <div class="row">
         <label for="">Select either Cluster or AZ for your search:</label>
         <select class="form-control" name="queryClusterAZ" autofocus="true">
           <option value="cluster">Cluster</option>
           <option value="az">AZ</option>
         </select>
-      </div>
+      </div> -->
 
       <div class="row">
-        <label for="">Type in the data in accordance to the selection above:</label>
-        <input class="form-control" type="text" name="inputForm" placeholder="Name of the Cluster (e.g. gru) or name of the AZ (e.g. gru1)" autocomplete="off" required>
+        <label for="">Type in the AZ:</label>
+        <input class="form-control" type="text" name="inputForm" placeholder="gru1" autocomplete="off" required>
       </div>
 
       <div class="row">
