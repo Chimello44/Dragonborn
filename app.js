@@ -133,13 +133,13 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                   });
                   newCircuit.save();
                   res.render("success.ejs", {
-                    success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az),
+                    success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az + "."),
                     route: "/addcircuit"
                   });
                   PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, { $inc: {capacity: -1} }, function(err, doc){});
                 } else {
                   res.render("fail.ejs", {
-                    fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database.",
+                    fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az) + ".",
                     route: "/addcircuit"
                   });
                 }
@@ -158,7 +158,6 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                     az: az,
                     cluster: device.slice(0,3)
                   }, function(err, doc){
-                    console.log(doc._circuit + " updated.");
                     res.render("success.ejs", {
                       success: "Circuit ID " + _.toUpper(serialId) + " updated.",
                       route: "/update"
@@ -173,7 +172,7 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
 
             } else {
               res.render("fail.ejs", {
-                fail: "No capacity to deploy new circuits on panel " + patchPanel,
+                fail: "No capacity to deploy new circuits on panel " + _.toUpper(patchPanel) + ".",
                 route: "/add"
               });
             }
@@ -181,7 +180,7 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
         } else {
           res.render("fail.ejs", {
             fail: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
-            route: "/update"
+            route: "/add"
           });
         }
       });
@@ -289,13 +288,11 @@ app.post("/addpp", function(req, res){
             cluster: cluster
           });
           newPatchPanel.save();
-          console.log(patchPanel + " created for " + az);
           res.render("success.ejs", {
             success: _.toUpper(patchPanel) + " created for " + _.toUpper(az),
             route: "/add"
           });
         } else {
-          console.log("Patch-Panel already exists for " + az);
           res.render("success.ejs", {
             success: "Panel " + _.toUpper(patchPanel) + " already exists for " + _.toUpper(az) + ".",
             route: "/add"
@@ -324,13 +321,22 @@ app.post("/addAz", function(req, res){
             cluster: _.toLower(az.slice(0,3))
           });
           newAz.save();
-          console.log(_.toUpper(az) + " added to database.");
+          res.render("success.ejs", {
+            success: _.toUpper(az) + " added to database.",
+            route: "/add"
+          });
 
         } else if (foundAz === 1) {
-          console.log(_.toUpper(az) + " already created.");
+          res.render("fail.ejs", {
+            fail: _.toUpper(az) + " already created.",
+            route: "/add"
+          });
 
         } else {
-          console.log(_.toUpper(az) + " duplicated.");
+          res.render("fail.ejs", {
+            fail: _.toUpper(az) + " duplicated.",
+            route: "/add"
+          });
         }
       });
 
@@ -339,14 +345,16 @@ app.post("/addAz", function(req, res){
         _id: _.toLower(cluster)
       });
       newCluster.save();
-      console.log(_.toUpper(cluster) + " created.");
 
       const newAz = new Az({
         _id: _.toLower(az),
         cluster: _.toLower(az.slice(0,3))
       });
       newAz.save();
-      console.log(_.toUpper(az) + " added to database.");
+      res.render("success.ejs", {
+        success: _.toUpper(az) + " added to database.",
+        route: "/add"
+      });
     }
   });
 });
