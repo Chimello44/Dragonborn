@@ -3,9 +3,8 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const ejs = require("ejs");
 const _ = require("lodash");
-const autoIncrement = require("mongoose-auto-increment");
 
-var async = require("async");
+const mongoXlsx = require("mongo-xlsx");
 
 const app = express();
 
@@ -453,6 +452,22 @@ app.post("/deletecircuit", function(req, res){
       success: "Circuit ID " + doc._circuit + " has been decommissioned.",
       route: "/delete"
     });
+  });
+});
+
+
+
+
+// Generates a report
+app.post("/generatereport", function(req, res){
+  const report = _.toLower(req.body.report);
+  
+});
+
+
+app.get("/report", function(req, res){
+  res.render("report.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
 });
 

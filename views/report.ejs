@@ -1,0 +1,31 @@
+<%- include("header.ejs"); -%>
+
+
+<div class="body">
+  <div class="body-content">
+    <h2 class="title">Cross-Connect Report</h2>
+    <p class="text-secondary"><%= skyrimPhrases %></p>
+    <form action="/result" method="post">
+
+      <div class="row">
+        <label for="">Select either Cluster or AZ to generate a cross-connect report per patch-panel and then inform the ID to generate the report.</label>
+        <select class="form-control" name="report" autofocus="true">
+          <option value="cluster">Cluster</option>
+          <option value="az">AZ</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label for="">Type in the filter for your report:</label>
+        <input class="form-control" type="text" name="inputForm" placeholder="" autocomplete="off" required>
+      </div>
+
+      <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="button">Generate Report</button>
+    </form>
+  </div>
+
+
+
+
+
+  <%- include("footer.ejs"); -%>

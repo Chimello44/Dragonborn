@@ -1,5 +1,25 @@
 $(document).ready(function(){
 
+  // Restricts the first input field to accept either Cluster or Site ID.
+  $("input[name=inputForm]").attr({
+    pattern: "[A-Za-z]{3}",
+    title: "Cluster ID"
+  });
+  $("select[name=report]").on("change", function(){
+    if ($("select[name=report] option:selected").val() === "cluster") {
+      $("input[name=inputForm]").attr({
+        pattern: "[A-Za-z]{3}",
+        title: "Cluster ID"
+      });
+    } else {
+      $("input[name=inputForm]").attr({
+
+        pattern: "[A-Za-z]{3}[0-9]{1,2}",
+        title: "Site ID"
+      });
+    }
+  });
+
   // Enables or disables the second input field depending on whether a filter will be used.
   $("input[name=queryParameter]").prop("disabled", true);
   $("select[name=queryOption]").on("change", function(){
@@ -9,4 +29,8 @@ $(document).ready(function(){
       $("input[name=queryParameter]").prop("disabled", false);
     }
   });
+
+
+
+
 });
