@@ -1,0 +1,65 @@
+<%- include("header.ejs"); -%>
+<div class="body">
+  <div class="body-content">
+
+    <h2 class="title">Double check the values below and hit "Decommission".</h2>
+
+    <% connection.forEach(function(ckt){ %>
+
+    <form action="/deletecircuit" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
+      <input type="hidden" name="page" value="updatecircuit">
+      <div class="row">
+        <label for="">Circuit ID</label>
+        <input class="form-control" type="text" name="serialId" value="<%= ckt._circuit %>" placeholder="ABC123456" autocomplete="off" contenteditable="false" readonly />
+      </div>
+
+      <div class="row">
+        <label for="">Service Provider / Peer</label>
+        <input class="form-control" type="text" name="serviceProvider" value="<%= ckt.serviceprovider %>" placeholder="Telefónica" autocomplete="off" readonly />
+      </div>
+
+      <div class="row">
+        <label for="">Bandwidth</label>
+        <input class="form-control" type=Number name="bandwidth" value="<%= ckt.bandwidth %>" autocomplete="off" placeholder="100" required readonly />
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="">Patch-Panel</label>
+          <input type="text" name="patchPanel" class="form-control" value="<%= ckt.patchpanel %>" placeholder="PP45" autocomplete="off" required readonly />
+        </div>
+
+        <div class="col">
+          <label for="">Patch-Panel Port</label>
+          <input type="text" name="port" class="form-control" value="<%= ckt.patchpanelport %>" placeholder="1/2" autocomplete="off" required readonly />
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col">
+          <label for="">Device (hostname)</label>
+          <input type="text" name="device" class="form-control" value="<%= ckt.device %>" placeholder="gru1-br-cor-r3" autocomplete="off" required readonly />
+        </div>
+
+        <div class="col">
+          <label for="">Device Interface</label>
+          <input type="text" name="interface" class="form-control" value="<%= ckt.interface %>" placeholder="et-0/0/11" autocomplete="off" required readonly />
+        </div>
+      </div>
+      <button class="row btn btn-secondary btn-lg btn-block" type="submit" name="button">Decommission</button>
+    </form>
+
+
+
+    <% }); %>
+
+    <div>
+
+    </div>
+
+    <a href="/delete" class="searchButton btn btn-outline-secondary">Return</a>
+
+
+
+  </div>
+  <%- include("footer.ejs"); -%>

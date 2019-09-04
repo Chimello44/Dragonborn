@@ -1,0 +1,20 @@
+<%- include("header.ejs"); -%>
+
+
+<div class="body">
+  <div class="body-content">
+    <h2 class="title">Fill in the cross-connection ID you wish to decommission.</h2>
+    <p class="text-secondary"><%= skyrimPhrases %></p>
+    <form class="searchForm" action="/delete" method="post">
+      <div class="row">
+        <input class="form-control" type="text" name="inputDelete" placeholder="Enter the cross-connection ID" autocomplete="off" autofocus="true" required>
+      </div>
+
+      <button class="row btn btn-secondary btn-lg btn-block" type="submit" name="updateButton" href="/updatecircuit">Search</button>
+
+
+    </form>
+  </div>
+
+
+<%- include("footer.ejs"); -%>

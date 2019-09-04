@@ -404,6 +404,64 @@ app.post("/update", function(req, res){
 
 
 
+// Collect the circuit ID which will be decommissioned.
+app.post("/delete", function(req, res){
+  const deleteSerialId = req.body.inputDelete;
+  Xconn.find({_circuit: deleteSerialId}, function(err, result){
+    if (err) {
+      console.log(err);
+    } else {
+      if (result.length === 1) {
+        res.render("deletecircuit.ejs", {
+          connection: result
+        });
+      } else if (result.length === 0) {
+        res.render("fail.ejs", {
+          fail: deleteSerialId + " hasn't been found.",
+          route: "/delete"
+        });
+      } else {
+        res.render("fail.ejs", {
+          fail: deleteSerialId + " is duplicated.",
+          route: "/delete"
+        });
+      }
+    }
+  });
+});
+
+
+
+
+// Decommission circuit.
+app.post("/deletecircuit", function(req, res){
+  const deleteSerialId = _.toLower(req.body.serialId);
+  const patchPanel = _.toLower(req.body.patchPanel);
+  const device = _.toLower(req.body.device);
+  if (device[5] === "-") {
+    var az = _.toLower(device.slice(0,5));
+  } else {
+    var az = _.toLower(device.slice(0,4));
+  }
+
+
+
+
+  Xconn.findOneAndDelete({_circuit: deleteSerialId}, function(err, doc){
+    console.log(doc._circuit);
+    console.log("CIRCUIT DELETED");
+    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, { $inc: {capacity: 1} }, function(err, doc){
+      console.log(doc);
+    });
+    res.render("success.ejs", {
+      success: doc._circuit + " has been decommissioned.",
+      route: "/delete"
+    });
+  });
+});
+
+
+
 // GET METHODS
 
 // This action is triggered when a request is received at the home route.
@@ -441,6 +499,13 @@ app.get("/update", function(req, res) {
 
 app.get("/addaz", function(req, res){
   res.render("addaz.ejs");
+});
+
+// Method to decommission circuit.
+app.get("/delete", function(req, res){
+  res.render("delete.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+  });
 });
 
 
