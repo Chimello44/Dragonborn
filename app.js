@@ -448,13 +448,9 @@ app.post("/deletecircuit", function(req, res){
 
 
   Xconn.findOneAndDelete({_circuit: deleteSerialId}, function(err, doc){
-    console.log(doc._circuit);
-    console.log("CIRCUIT DELETED");
-    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, { $inc: {capacity: 1} }, function(err, doc){
-      console.log(doc);
-    });
+    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, { $inc: {capacity: 1} }, function(err, doc){});
     res.render("success.ejs", {
-      success: doc._circuit + " has been decommissioned.",
+      success: "Circuit ID " + doc._circuit + " has been decommissioned.",
       route: "/delete"
     });
   });
