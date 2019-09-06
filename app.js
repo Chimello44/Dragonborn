@@ -4,7 +4,10 @@ const mongoose = require("mongoose");
 const ejs = require("ejs");
 const _ = require("lodash");
 
-const mongoXlsx = require("mongo-xlsx");
+// const mongoXlsx = require("mongo-xlsx");
+
+const json2csv = require("json2csv").parse;
+const fs = require("fs");
 
 const app = express();
 
@@ -109,15 +112,26 @@ const Cluster = mongoose.model("Cluster", clusterSchema);
 
 
 
-function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate, res){
-  Az.countDocuments({_id: az}, function(err, foundAz){
+function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate, res) {
+  Az.countDocuments({
+    _id: az
+  }, function(err, foundAz) {
     if (foundAz === 1) {
-      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel){
+      PatchPanel.countDocuments({
+        _patchpanel: patchPanel,
+        az: az
+      }, function(err, foundPatchPanel) {
         if (foundPatchPanel === 1) {
-          PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, doc){
+          PatchPanel.findOne({
+            _patchpanel: patchPanel,
+            az: az
+          }, function(err, doc) {
 
-            if ((doc.capacity > 0) && (actionAddUpdate === "addcircuit")){
-              Xconn.countDocuments({_circuit: serialId, az: az}, function(err, doc){
+            if ((doc.capacity > 0) && (actionAddUpdate === "addcircuit")) {
+              Xconn.countDocuments({
+                _circuit: serialId,
+                az: az
+              }, function(err, doc) {
                 if (doc === 0) {
                   const newCircuit = new Xconn({
                     _circuit: serialId,
@@ -128,14 +142,21 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                     device: device,
                     interface: interface,
                     az: az,
-                    cluster: device.slice(0,3)
+                    cluster: device.slice(0, 3)
                   });
                   newCircuit.save();
                   res.render("success.ejs", {
                     success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az + "."),
                     route: "/addcircuit"
                   });
-                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, { $inc: {capacity: -1} }, function(err, doc){});
+                  PatchPanel.findOneAndUpdate({
+                    az: az,
+                    _patchpanel: patchPanel
+                  }, {
+                    $inc: {
+                      capacity: -1
+                    }
+                  }, function(err, doc) {});
                 } else {
                   res.render("fail.ejs", {
                     fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az) + ".",
@@ -145,29 +166,32 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
               });
 
             } else if (actionAddUpdate == "updatecircuit") {
-                if (foundPatchPanel === 1) {
-                  Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
-                    _circuit: serialId,
-                    serviceprovider: serviceProvider,
-                    bandwidth: bandwidth,
-                    patchpanel: patchPanel,
-                    patchpanelport: patchPanelPort,
-                    device: device,
-                    interface: interface,
-                    az: az,
-                    cluster: device.slice(0,3)
-                  }, function(err, doc){
-                    res.render("success.ejs", {
-                      success: "Circuit ID " + _.toUpper(serialId) + " updated.",
-                      route: "/update"
-                    });
-                  });
-                } else {
-                  res.render("fail.ejs", {
-                    success: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+              if (foundPatchPanel === 1) {
+                Xconn.findOneAndUpdate({
+                  _circuit: serialId,
+                  az: az
+                }, {
+                  _circuit: serialId,
+                  serviceprovider: serviceProvider,
+                  bandwidth: bandwidth,
+                  patchpanel: patchPanel,
+                  patchpanelport: patchPanelPort,
+                  device: device,
+                  interface: interface,
+                  az: az,
+                  cluster: device.slice(0, 3)
+                }, function(err, doc) {
+                  res.render("success.ejs", {
+                    success: "Circuit ID " + _.toUpper(serialId) + " updated.",
                     route: "/update"
-                  })
-                }
+                  });
+                });
+              } else {
+                res.render("fail.ejs", {
+                  success: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+                  route: "/update"
+                })
+              }
 
             } else {
               res.render("fail.ejs", {
@@ -237,7 +261,7 @@ app.post("/result", function(req, res) {
 
 
 // Add circuit route.
-app.post("/addcircuit", function(req, res){
+app.post("/addcircuit", function(req, res) {
   const serialId = _.toLower(req.body.serialId);
   const serviceProvider = _.toLower(req.body.serviceProvider).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const bandwidth = req.body.bandwidth;
@@ -246,12 +270,12 @@ app.post("/addcircuit", function(req, res){
   const device = _.toLower(req.body.device);
   const interface = _.toLower(req.body.interface);
 
-  const cluster = device.slice(0,3);
+  const cluster = device.slice(0, 3);
 
   if (device[5] === "-") {
-    var az = _.toLower(device.slice(0,5));
+    var az = _.toLower(device.slice(0, 5));
   } else {
-    var az = _.toLower(device.slice(0,4));
+    var az = _.toLower(device.slice(0, 4));
   }
 
   const actionAddUpdate = req.body.page;
@@ -265,20 +289,25 @@ app.post("/addcircuit", function(req, res){
 
 
 // Add Patch-Panel route.
-app.post("/addpp", function(req, res){
+app.post("/addpp", function(req, res) {
   const patchPanel = _.toLower(req.body.patchPanelId);
   const capacity = req.body.capacity;
   const az = _.toLower(req.body.az);
-  const cluster = az.slice(0,3);
+  const cluster = az.slice(0, 3);
 
-  Az.countDocuments({_id: az}, function(err, foundAz){
+  Az.countDocuments({
+    _id: az
+  }, function(err, foundAz) {
     if (foundAz === 0) {
       res.render("fail.ejs", {
         fail: "There's no AZ for panel " + _.toUpper(patchPanel),
         route: "/add"
       });
     } else if (foundAz === 1) {
-      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel){
+      PatchPanel.countDocuments({
+        _patchpanel: patchPanel,
+        az: az
+      }, function(err, foundPatchPanel) {
         if (foundPatchPanel === 0) {
           const newPatchPanel = new PatchPanel({
             _patchpanel: patchPanel,
@@ -306,18 +335,22 @@ app.post("/addpp", function(req, res){
 
 
 // Add AZ route.
-app.post("/addAz", function(req, res){
+app.post("/addAz", function(req, res) {
   const az = _.toLower(req.body.az);
-  const cluster = _.toLower(az.slice(0,3));
+  const cluster = _.toLower(az.slice(0, 3));
 
-  Cluster.countDocuments({_id: _.toLower(az.slice(0,3))}, function(err, foundCluster){
+  Cluster.countDocuments({
+    _id: _.toLower(az.slice(0, 3))
+  }, function(err, foundCluster) {
     if (foundCluster === 1) {
 
-      Az.countDocuments({_id: _.toLower(az)}, function(err, foundAz){
+      Az.countDocuments({
+        _id: _.toLower(az)
+      }, function(err, foundAz) {
         if (foundAz === 0) {
           const newAz = new Az({
             _id: _.toLower(az),
-            cluster: _.toLower(az.slice(0,3))
+            cluster: _.toLower(az.slice(0, 3))
           });
           newAz.save();
           res.render("success.ejs", {
@@ -347,7 +380,7 @@ app.post("/addAz", function(req, res){
 
       const newAz = new Az({
         _id: _.toLower(az),
-        cluster: _.toLower(az.slice(0,3))
+        cluster: _.toLower(az.slice(0, 3))
       });
       newAz.save();
       res.render("success.ejs", {
@@ -378,7 +411,7 @@ app.post("/updatecircuit", function(req, res) {
 
 
 // Update circuit route.
-app.post("/update", function(req, res){
+app.post("/update", function(req, res) {
   const serialId = _.toLower(req.body.serialId);
   const serviceProvider = _.toLower(req.body.serviceProvider);
   const bandwidth = req.body.bandwidth;
@@ -387,12 +420,12 @@ app.post("/update", function(req, res){
   const device = _.toLower(req.body.device);
   const interface = _.toLower(req.body.interface);
 
-  const cluster = device.slice(0,3);
+  const cluster = device.slice(0, 3);
 
   if (device[5] === "-") {
-    var az = _.toLower(device.slice(0,5));
+    var az = _.toLower(device.slice(0, 5));
   } else {
-    var az = _.toLower(device.slice(0,4));
+    var az = _.toLower(device.slice(0, 4));
   }
 
   const actionAddUpdate = req.body.page;
@@ -404,9 +437,11 @@ app.post("/update", function(req, res){
 
 
 // Collect the circuit ID which will be decommissioned.
-app.post("/delete", function(req, res){
+app.post("/delete", function(req, res) {
   const deleteSerialId = req.body.inputDelete;
-  Xconn.find({_circuit: deleteSerialId}, function(err, result){
+  Xconn.find({
+    _circuit: deleteSerialId
+  }, function(err, result) {
     if (err) {
       console.log(err);
     } else {
@@ -433,21 +468,30 @@ app.post("/delete", function(req, res){
 
 
 // Decommission circuit.
-app.post("/deletecircuit", function(req, res){
+app.post("/deletecircuit", function(req, res) {
   const deleteSerialId = _.toLower(req.body.serialId);
   const patchPanel = _.toLower(req.body.patchPanel);
   const device = _.toLower(req.body.device);
   if (device[5] === "-") {
-    var az = _.toLower(device.slice(0,5));
+    var az = _.toLower(device.slice(0, 5));
   } else {
-    var az = _.toLower(device.slice(0,4));
+    var az = _.toLower(device.slice(0, 4));
   }
 
 
 
 
-  Xconn.findOneAndDelete({_circuit: deleteSerialId}, function(err, doc){
-    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, { $inc: {capacity: 1} }, function(err, doc){});
+  Xconn.findOneAndDelete({
+    _circuit: deleteSerialId
+  }, function(err, doc) {
+    PatchPanel.findOneAndUpdate({
+      az: az,
+      _patchpanel: patchPanel
+    }, {
+      $inc: {
+        capacity: 1
+      }
+    }, function(err, doc) {});
     res.render("success.ejs", {
       success: "Circuit ID " + doc._circuit + " has been decommissioned.",
       route: "/delete"
@@ -459,13 +503,60 @@ app.post("/deletecircuit", function(req, res){
 
 
 // Generates a report
-app.post("/generatereport", function(req, res){
+app.post("/generatereport", function(req, res) {
   const report = _.toLower(req.body.report);
-  
+  const filter = _.toLower(req.body.inputForm);
+  const result = [];
+  console.log(report, filter);
+
+  if (report === "cluster") {
+    Xconn.find({
+      cluster: filter
+    }, function(err, docs) {
+      docs.forEach(function(element) {
+        result.push(element);
+      });
+      console.log(result);
+
+      let csv = json2csv({
+        data: result,
+        fields: ["result._circuit", "result.serviceprovider", "result.bandwidth", "result.patchpanel", "result.patchpanelport", "result.device", "result.interface", "result.az", "result.cluster"]
+      });
+
+      fs.writeFile("report.csv", csv, function(err) {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("File saved");
+        }
+      });
+      // let csv = json2csv({data: result, fields: ["_circuit", "serviceprovider", "bandwidth", "patchpanel", "patchpanelport", "device", "interface", "az", "cluster"]}, function(err, csv){
+      //   if (err) {
+      //     res.render("fail.ejs", {
+      //       fail: "Download failed. Please try again.",
+      //       route: "/report"
+      //     });
+      //   } else {
+      //     res.render("success.ejs", {
+      //       success: "File downloaded.",
+      //       route: "/"
+      //     });
+      //   }
+      //   fs.writeFile("report.csv", csv, function(err){
+      //     if (err) {
+      //       console.log(err);
+      //     } else {
+      //       console.log("File saved");
+      //     }
+      //   });
+      // });
+
+    });
+  }
 });
 
 
-app.get("/report", function(req, res){
+app.get("/report", function(req, res) {
   res.render("report.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
@@ -508,12 +599,12 @@ app.get("/update", function(req, res) {
   });
 });
 
-app.get("/addaz", function(req, res){
+app.get("/addaz", function(req, res) {
   res.render("addaz.ejs");
 });
 
 // Method to decommission circuit.
-app.get("/delete", function(req, res){
+app.get("/delete", function(req, res) {
   res.render("delete.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
