@@ -513,14 +513,9 @@ app.post("/generatereport", function(req, res) {
   const report = _.toLower(req.body.report);
   const filter = _.toLower(req.body.inputForm);
   const result = [];
-  console.log(report, filter);
 
   if (report === "cluster") {
     Xconn.find({cluster: filter}, function(err, docs) {
-      docs.forEach(function(element) {
-        result.push(element);
-      });
-      console.log(docs);
 
       // https://stackabuse.com/reading-and-writing-csv-files-with-node-js/
 
@@ -537,6 +532,17 @@ app.post("/generatereport", function(req, res) {
       fs.writeFileSync("report.xlsx", xls, "binary");
       res.download("report.xlsx", "report.xlsx");
 
+    });
+  } else {
+    Xconn.find({az: filter}, function(err, docs){
+      app.use(json2xls.middleware);
+      var xls = json2xls(docs,{
+        fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
+      });
+      res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
+      res.setHeader('Content-type', 'text/xlsx');
+      fs.writeFileSync("report.xlsx", xls, "binary");
+      res.download("report.xlsx", "report.xlsx");
     });
   }
 });
