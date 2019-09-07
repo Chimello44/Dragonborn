@@ -7,6 +7,12 @@ const _ = require("lodash");
 // const mongoXlsx = require("mongo-xlsx");
 
 const json2csv = require("json2csv").parse;
+
+var json2xls = require('json2xls');
+
+
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+
 const fs = require("fs");
 
 const app = express();
@@ -510,46 +516,26 @@ app.post("/generatereport", function(req, res) {
   console.log(report, filter);
 
   if (report === "cluster") {
-    Xconn.find({
-      cluster: filter
-    }, function(err, docs) {
+    Xconn.find({cluster: filter}, function(err, docs) {
       docs.forEach(function(element) {
         result.push(element);
       });
-      console.log(result);
+      console.log(docs);
 
-      let csv = json2csv({
-        data: result,
-        fields: ["result._circuit", "result.serviceprovider", "result.bandwidth", "result.patchpanel", "result.patchpanelport", "result.device", "result.interface", "result.az", "result.cluster"]
-      });
+      // https://stackabuse.com/reading-and-writing-csv-files-with-node-js/
 
-      fs.writeFile("report.csv", csv, function(err) {
-        if (err) {
-          console.log(err);
-        } else {
-          console.log("File saved");
-        }
+      // https://www.npmjs.com/package/json2xls
+      // https://stackoverflow.com/questions/42003340/node-json2xls-downloadable-file
+      // https://stackoverflow.com/questions/7288814/download-a-file-from-nodejs-server-using-express
+
+      app.use(json2xls.middleware);
+      var xls = json2xls(docs,{
+        fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
       });
-      // let csv = json2csv({data: result, fields: ["_circuit", "serviceprovider", "bandwidth", "patchpanel", "patchpanelport", "device", "interface", "az", "cluster"]}, function(err, csv){
-      //   if (err) {
-      //     res.render("fail.ejs", {
-      //       fail: "Download failed. Please try again.",
-      //       route: "/report"
-      //     });
-      //   } else {
-      //     res.render("success.ejs", {
-      //       success: "File downloaded.",
-      //       route: "/"
-      //     });
-      //   }
-      //   fs.writeFile("report.csv", csv, function(err){
-      //     if (err) {
-      //       console.log(err);
-      //     } else {
-      //       console.log("File saved");
-      //     }
-      //   });
-      // });
+      res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
+      res.setHeader('Content-type', 'text/xlsx');
+      fs.writeFileSync("report.xlsx", xls, "binary");
+      res.download("report.xlsx", "report.xlsx");
 
     });
   }

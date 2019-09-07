@@ -30,7 +30,10 @@ $(document).ready(function(){
     }
   });
 
-
+  $("input[name=az]").attr({
+    pattern: "[A-Za-z]{3}[0-9]{1,2}",
+    title: "Site ID"
+  });
 
 
 });
