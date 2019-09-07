@@ -515,44 +515,87 @@ app.post("/generatereport", function(req, res) {
   const result = [];
 
   if (report === "cluster") {
-    Xconn.find({cluster: filter}, function(err, docs) {
 
-      // https://stackabuse.com/reading-and-writing-csv-files-with-node-js/
+    Cluster.countDocuments({_id: filter}, function(err, foundCluster){
+      if (foundCluster === 0) {
+        res.render("fail.ejs", {
+          fail: _.toUpper(filter) + " is not registered.",
+          route: "/report"
+        });
+      } else if (foundCluster === 1) {
+        Xconn.countDocuments({cluster: filter}, function(err, foundCircuits){
+          if(foundCircuits === 0){
+            res.render("fail.ejs", {
+              fail: _.toUpper(filter) + " doesn't have cross-connect circuits registered.",
+              route: "/report"
+            });
+          } else {
+            Xconn.find({cluster: filter}, function(err, docs) {
 
-      // https://www.npmjs.com/package/json2xls
-      // https://stackoverflow.com/questions/42003340/node-json2xls-downloadable-file
-      // https://stackoverflow.com/questions/7288814/download-a-file-from-nodejs-server-using-express
+              // https://stackabuse.com/reading-and-writing-csv-files-with-node-js/
 
-      app.use(json2xls.middleware);
-      var xls = json2xls(docs,{
-        fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
-      });
-      res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
-      res.setHeader('Content-type', 'text/xlsx');
-      fs.writeFileSync("report.xlsx", xls, "binary");
-      res.download("report.xlsx", "report.xlsx");
+              // https://www.npmjs.com/package/json2xls
+              // https://stackoverflow.com/questions/42003340/node-json2xls-downloadable-file
+              // https://stackoverflow.com/questions/7288814/download-a-file-from-nodejs-server-using-express
 
+              app.use(json2xls.middleware);
+              var xls = json2xls(docs,{
+                fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
+              });
+              res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
+              res.setHeader('Content-type', 'text/xlsx');
+              fs.writeFileSync("report.xlsx", xls, "binary");
+              res.download("report.xlsx", "report.xlsx");
+
+            });
+          }
+        });
+      } else {
+        res.render("fail.ejs", {
+          fail: _.toUpper(filter) + " is duplicated.",
+          route: "/report"
+        });
+      }
     });
+
   } else {
-    Xconn.find({az: filter}, function(err, docs){
-      app.use(json2xls.middleware);
-      var xls = json2xls(docs,{
-        fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
-      });
-      res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
-      res.setHeader('Content-type', 'text/xlsx');
-      fs.writeFileSync("report.xlsx", xls, "binary");
-      res.download("report.xlsx", "report.xlsx");
+
+    Az.countDocuments({_id: filter}, function(err, foundAz){
+      if (foundAz === 0) {
+        res.render("fail.ejs", {
+          fail: _.toUpper(filter) + " is not registered.",
+          route: "/report"
+        });
+      } else if (foundAz === 1) {
+        Xconn.countDocuments({az: filter}, function(err, foundCircuits){
+          if (foundCircuits === 0) {
+            res.render("fail.ejs", {
+              fail: _.toUpper(filter) + " doesn't have cross-connect circuits registered.",
+              route: "/report"
+            });
+          } else {
+            Xconn.find({az: filter}, function(err, docs){
+              app.use(json2xls.middleware);
+              var xls = json2xls(docs,{
+                fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
+              });
+              res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
+              res.setHeader('Content-type', 'text/xlsx');
+              fs.writeFileSync("report.xlsx", xls, "binary");
+              res.download("report.xlsx", "report.xlsx");
+            });
+          }
+        });
+      } else {
+        res.render("fail.ejs", {
+          fail: _.toUpper(filter) + " is duplicated.",
+          route: "/report"
+        });
+      }
     });
   }
 });
 
-
-app.get("/report", function(req, res) {
-  res.render("report.ejs", {
-    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-  });
-});
 
 
 
@@ -598,6 +641,12 @@ app.get("/addaz", function(req, res) {
 // Method to decommission circuit.
 app.get("/delete", function(req, res) {
   res.render("delete.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+  });
+});
+
+app.get("/report", function(req, res) {
+  res.render("report.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
 });
