@@ -503,7 +503,7 @@ app.post("/deletecircuit", function(req, res) {
 
 // Generates a report
 app.post("/generatereport", function(req, res) {
-  const report = _.toLower(req.body.report);
+  const report = _.toLower(req.body.queryClusterAZ);
   const filter = _.toLower(req.body.inputForm);
   const result = [];
 
