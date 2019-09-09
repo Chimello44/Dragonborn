@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const ejs = require("ejs");
 const _ = require("lodash");
 
-var json2xls = require('json2xls');
+const json2xls = require('json2xls');
 
 const fs = require("fs");
 
