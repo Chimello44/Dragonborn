@@ -5,17 +5,16 @@ $(document).ready(function(){
     pattern: "[A-Za-z]{3}",
     title: "Cluster ID"
   });
-  $("select[name=report]").on("change", function(){
-    if ($("select[name=report] option:selected").val() === "cluster") {
+  $("select[name=queryClusterAZ]").on("change", function(){
+    if ($("select[name=queryClusterAZ] option:selected").val() === "az") {
       $("input[name=inputForm]").attr({
-        pattern: "[A-Za-z]{3}",
-        title: "Cluster ID"
+        pattern: "[A-Za-z]{3}[0-9]{1,2}",
+        title: "Site ID"
       });
     } else {
       $("input[name=inputForm]").attr({
-
-        pattern: "[A-Za-z]{3}[0-9]{1,2}",
-        title: "Site ID"
+        pattern: "[A-Za-z]{3}",
+        title: "Cluster ID"
       });
     }
   });
