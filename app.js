@@ -226,6 +226,7 @@ app.post("/result", function(req, res) {
   const valueOfData = _.toLower(req.body.inputForm).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const queryOption = _.toLower(req.body.queryOption);
   const queryParameter = _.toLower(req.body.queryParameter);
+
   const query = {};
   const searchTitle = _.toUpper(valueOfData);
   query[typeOfData] = valueOfData;

@@ -89,6 +89,10 @@ footer {
   margin: 0;
 }
 
+table {
+  background-color: #f7f7f7;
+}
+
 .table {
   margin: 0;
 }
@@ -104,4 +108,8 @@ th {
 
 td {
   font-size: 1.3rem;
+}
+
+.hoverTable:hover {
+  color: red;
 }
