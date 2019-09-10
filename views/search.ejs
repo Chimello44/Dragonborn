@@ -6,24 +6,19 @@
     <h2 class="title">Cross-Connect Search</h2>
     <p class="text-secondary"><%= skyrimPhrases %></p>
     <form action="/result" method="post">
-      <div class="row">
-        <label for="">Select either Cluster or AZ for your search:</label>
-        <select class="form-control" name="queryClusterAZ" autofocus="true">
-          <option value="cluster">Cluster</option>
-          <option value="az">AZ</option>
-        </select>
-      </div>
+
+      <input type="hidden" name="queryClusterAZ" value="az">
 
       <div class="row">
-        <label for="">Type in the filter for your search:</label>
-        <input class="form-control" type="text" name="inputForm" placeholder="Name of the Cluster (e.g. gru) or name of the AZ (e.g. gru1)" autocomplete="off" required>
+        <label for="">Type in the AZ for your search:</label>
+        <input class="form-control" type="text" name="inputForm" placeholder="gru1" autocomplete="off" required>
       </div>
 
       <div class="row">
         <label for="">Specify the filter for your search (leave it empty for all records):</label>
         <select class="form-control" name="queryOption" autofocus="true">
           <option value="allRecords"></option>
-          <option value="_id">Circuit ID</option>
+          <option value="_circuit">Circuit ID</option>
           <option value="serviceProvider">Service Provider / Peer</option>
           <option value="patchPanel">Patch-Panel</option>
         </select>
@@ -31,7 +26,7 @@
 
       <div class="row">
         <label for="">Type in the data you want to filter:</label>
-        <input class="form-control" type="text" name="queryParameter" placeholder="(Optional)" autocomplete="off">
+        <input class="form-control" type="text" name="queryParameter" placeholder="" autocomplete="off" required>
       </div>
 
       <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="button">Search</button>

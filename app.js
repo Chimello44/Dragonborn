@@ -396,10 +396,9 @@ app.post("/addAz", function(req, res) {
 
 // Collect the serial ID from the circuit that will be updated.
 app.post("/updatecircuit", function(req, res) {
-  const updateSerialID = req.body.inputUpdate;
-  Xconn.find({
-    _circuit: updateSerialID
-  }, function(err, result) {
+  const updateSerialID = _.toLower(req.body.inputUpdate);
+  const inputForm = _.toLower(req.body.inputForm);
+  Xconn.find({_circuit: updateSerialID, az: inputForm}, function(err, result) {
     res.render("updatecircuit.ejs", {
       connection: result,
       skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]

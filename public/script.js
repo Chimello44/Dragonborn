@@ -1,10 +1,17 @@
 $(document).ready(function(){
 
   // Restricts the first input field to accept either Cluster or Site ID.
+
+  // $("input[name=inputForm]").attr({
+  //   pattern: "[A-Za-z]{3}",
+  //   title: "Cluster ID"
+  // });
+
   $("input[name=inputForm]").attr({
-    pattern: "[A-Za-z]{3}",
-    title: "Cluster ID"
+    pattern: "[A-Za-z]{3}[0-9]{1,2}",
+    title: "Site ID"
   });
+
   $("select[name=queryClusterAZ]").on("change", function(){
     if ($("select[name=queryClusterAZ] option:selected").val() === "az") {
       $("input[name=inputForm]").attr({

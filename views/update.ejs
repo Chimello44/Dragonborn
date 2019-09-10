@@ -7,7 +7,13 @@
     <p class="text-secondary"><%= skyrimPhrases %></p>
     <form class="searchForm" action="/updatecircuit" method="post">
       <div class="row">
-        <input class="form-control" type="text" name="inputUpdate" placeholder="Enter the cross-connection ID" autocomplete="off" autofocus="true" required>
+        <label for="">Enter the Circuit ID to be updated:</label>
+        <input class="form-control" type="text" name="inputUpdate" placeholder="" autocomplete="off" autofocus="true" required>
+      </div>
+
+      <div class="row">
+        <label for="">Enter the AZ which the circuit belongs to:</label>
+        <input class="form-control" type="text" name="inputForm" placeholder="" autocomplete="off" autofocus="true" required>
       </div>
 
       <button class="row btn btn-secondary btn-lg btn-block" type="submit" name="updateButton" href="/updatecircuit">Search</button>
