@@ -231,24 +231,43 @@ app.post("/result", function(req, res) {
   const searchTitle = _.toUpper(valueOfData);
   query[typeOfData] = valueOfData;
   if (queryOption == "allrecords") {
-    Xconn.find(query, function(err, connection) {
-      res.render("result.ejs", {
-        connection: connection,
-        valueOfData: searchTitle,
-        queryClusterAZ: typeOfData,
-        skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-      });
+    Xconn.countDocuments(query, function(err, docs){
+      if (docs === 0) {
+        res.render("fail.ejs", {
+          fail: "No data for your search. Perhaps your AZ does not have any circuits registered.",
+          route: "/search"
+        });
+      } else {
+        Xconn.find(query, function(err, connection) {
+          res.render("result.ejs", {
+            connection: connection,
+            valueOfData: searchTitle,
+            queryClusterAZ: typeOfData,
+            skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+          });
+        });
+      }
     });
+
     // If queryOption is not allrecords, it means that the user has selected a specific option for their search.
   } else {
     query[queryOption] = queryParameter;
-    Xconn.find(query, function(err, connection) {
-      res.render("result.ejs", {
-        connection: connection,
-        valueOfData: searchTitle,
-        queryClusterAZ: typeOfData,
-        skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-      });
+    Xconn.countDocuments(query, function(err, docs){
+      if (docs === 0) {
+        res.render("fail.ejs", {
+          fail: "No data for your search. Make sure to provide an ID that match the filter specified.",
+          route: "/search"
+        });
+      } else {
+        Xconn.find(query, function(err, connection) {
+          res.render("result.ejs", {
+            connection: connection,
+            valueOfData: searchTitle,
+            queryClusterAZ: typeOfData,
+            skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+          });
+        });
+      }
     });
 
     const searchTitle = _.toUpper(valueOfData)
@@ -259,6 +278,39 @@ app.post("/result", function(req, res) {
 
 
 
+
+app.post("/resultpptracker", function(req, res){
+  const az = _.toLower(req.body.inputForm);
+  const pp = _.toLower(req.body.pp);
+
+  const query = {};
+  query["az"] = az;
+  console.log(query);
+
+  // Check whether the AZ has patch-panels
+  PatchPanel.countDocuments(query, function(err, docs){
+    if (docs === 0) {
+      res.render("fail.ejs", {
+        fail: _.toUpper(az) + " doesn't have Patch-Panels registered.",
+        route: "/search"
+      });
+    } else {
+      // If there's no filter, the search looks for all panels inside the AZ.
+      if (pp === "") {
+        Xconn.find(query, function(err, panels){
+          console.log(panels);
+        });
+      } else {
+        // If a filter is specified, the search looks for the specific panel in that AZ.
+        query["patchpanel"] = pp;
+        Xconn.find(query, function(err, panels){
+          console.log(panels);
+        });
+      }
+    }
+  });
+
+});
 
 // Add circuit route.
 app.post("/addcircuit", function(req, res) {
@@ -604,7 +656,18 @@ app.get("/search", function(req, res) {
   res.render("search.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
+});
 
+app.get("/searchcircuit", function(req, res){
+  res.render("searchcircuit.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+  });
+});
+
+app.get("/searchpp", function(req, res){
+  res.render("searchpp.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+  });
 });
 
 app.get("/add", function(req, res) {

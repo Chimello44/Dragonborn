@@ -3,34 +3,17 @@
 
 <div class="body">
   <div class="body-content">
-    <h2 class="title">Cross-Connect Search</h2>
+    <h2 class="title">Search</h2>
     <p class="text-secondary"><%= skyrimPhrases %></p>
-    <form action="/result" method="post">
 
-      <input type="hidden" name="queryClusterAZ" value="az">
+    <div class="row">
+      <a href="/searchcircuit" class="form-control btn btn-secondary btn-lg btn-block">Cross-Connect Search</a>
+    </div>
 
-      <div class="row">
-        <label for="">Type in the AZ for your search:</label>
-        <input class="form-control" type="text" name="inputForm" placeholder="gru1" autocomplete="off" required>
-      </div>
+    <div class="row">
+      <a href="/searchpp" class="form-control btn btn-secondary btn-lg btn-block">Patch-Panel Search</a>
+    </div>
 
-      <div class="row">
-        <label for="">Specify the filter for your search (leave it empty for all records):</label>
-        <select class="form-control" name="queryOption" autofocus="true">
-          <option value="allRecords"></option>
-          <option value="_circuit">Circuit ID</option>
-          <option value="serviceProvider">Service Provider / Peer</option>
-          <option value="patchPanel">Patch-Panel</option>
-        </select>
-      </div>
-
-      <div class="row">
-        <label for="">Type in the data you want to filter:</label>
-        <input class="form-control" type="text" name="queryParameter" placeholder="" autocomplete="off" required>
-      </div>
-
-      <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="button">Search</button>
-    </form>
   </div>
 
 

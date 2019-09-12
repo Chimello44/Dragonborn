@@ -1,0 +1,35 @@
+<%- include("header.ejs"); -%>
+
+
+<div class="body">
+  <div class="body-content">
+    <h2 class="title">Patch-Panel Capacity Tracker</h2>
+    <p class="text-secondary"><%= skyrimPhrases %></p>
+    <form action="/resultpptracker" method="post">
+
+      <input type="hidden" name="queryClusterAZ" value="az">
+
+      <div class="row">
+        <label for="">Type in the AZ for your search:</label>
+        <input class="form-control" type="text" name="inputForm" placeholder="gru1" autocomplete="off" autofocus="true" required>
+      </div>
+
+      <div class="row">
+        <label for="">Type in the patch-panel ID or leave it empty for all records:</label>
+        <input class="form-control" type="text" name="pp" placeholder="Patch-Panel ID" autocomplete="off">
+      </div>
+
+      <div class="row">
+        <button class="searchButton btn btn-secondary btn-lg btn-block" type="submit" name="button">Search</button>
+      </div>
+
+    </form>
+
+    <a href="/search" class="btn btn-outline-secondary">Return</a>
+  </div>
+
+
+
+
+
+  <%- include("footer.ejs"); -%>
