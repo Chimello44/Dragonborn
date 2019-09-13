@@ -42,4 +42,24 @@ $(document).ready(function(){
   });
 
 
+
+  // Patch-Panel
+
+  // Assign all elements to capacity.
+  var capacity = $("p[name=capacity]");
+
+  // Loop through each element.
+  capacity.each(function(){
+    var totalCap = parseInt($(this).text()[18] + $(this).text()[19]);
+    // $(this) refers to each element.
+    if (totalCap < 5) {
+      $(this).addClass("bg-busy");
+    } else if (totalCap < 11) {
+      $(this).addClass("bg-almost");
+    } else {
+      $(this).addClass("progress-bar");
+    }
+  });
+
+
 });

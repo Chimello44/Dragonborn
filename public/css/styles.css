@@ -113,3 +113,32 @@ td {
 .hoverTable:hover {
   color: red;
 }
+
+
+/* Patch-Panel */
+
+.card {
+  background-color: #f7f7f7;
+  color: black;
+}
+
+.rackCapacity {
+  font-size: 1.3rem;
+}
+
+.bar {
+  border-radius: 7px;
+}
+
+.progress-bar {
+  background-color: #1dd1a1;
+  color: black;
+}
+
+.bg-busy {
+  background-color: #ff6b6b;
+}
+
+.bg-almost {
+  background-color: #feca57;
+}

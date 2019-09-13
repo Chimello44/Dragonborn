@@ -78,6 +78,7 @@ const patchPanelSchema = new mongoose.Schema({
     // index: true
   },
   capacity: Number,
+  rack: String,
   az: String,
   cluster: String
 });
@@ -116,21 +117,12 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
     _id: az
   }, function(err, foundAz) {
     if (foundAz === 1) {
-      PatchPanel.countDocuments({
-        _patchpanel: patchPanel,
-        az: az
-      }, function(err, foundPatchPanel) {
+      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel) {
         if (foundPatchPanel === 1) {
-          PatchPanel.findOne({
-            _patchpanel: patchPanel,
-            az: az
-          }, function(err, doc) {
+          PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, doc) {
 
             if ((doc.capacity > 0) && (actionAddUpdate === "addcircuit")) {
-              Xconn.countDocuments({
-                _circuit: serialId,
-                az: az
-              }, function(err, doc) {
+              Xconn.countDocuments({_circuit: serialId, az: az}, function(err, doc) {
                 if (doc === 0) {
                   const newCircuit = new Xconn({
                     _circuit: serialId,
@@ -148,14 +140,7 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                     success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az + "."),
                     route: "/addcircuit"
                   });
-                  PatchPanel.findOneAndUpdate({
-                    az: az,
-                    _patchpanel: patchPanel
-                  }, {
-                    $inc: {
-                      capacity: -1
-                    }
-                  }, function(err, doc) {});
+                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, doc) {});
                 } else {
                   res.render("fail.ejs", {
                     fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az) + ".",
@@ -166,10 +151,7 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
 
             } else if (actionAddUpdate == "updatecircuit") {
               if (foundPatchPanel === 1) {
-                Xconn.findOneAndUpdate({
-                  _circuit: serialId,
-                  az: az
-                }, {
+                Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
                   _circuit: serialId,
                   serviceprovider: serviceProvider,
                   bandwidth: bandwidth,
@@ -271,8 +253,6 @@ app.post("/result", function(req, res) {
     });
 
     const searchTitle = _.toUpper(valueOfData)
-    console.log(query);
-    console.log(typeOfData, valueOfData, queryParameter);
   }
 });
 
@@ -285,7 +265,6 @@ app.post("/resultpptracker", function(req, res){
 
   const query = {};
   query["az"] = az;
-  console.log(query);
 
   // Check whether the AZ has patch-panels
   PatchPanel.countDocuments(query, function(err, docs){
@@ -297,20 +276,29 @@ app.post("/resultpptracker", function(req, res){
     } else {
       // If there's no filter, the search looks for all panels inside the AZ.
       if (pp === "") {
-        Xconn.find(query, function(err, panels){
-          console.log(panels);
+        PatchPanel.find(query, function(err, docs){
+          res.render("resultpptracker.ejs", {
+            patchpanel: docs,
+            az: _.toUpper(az)
+          });
         });
       } else {
         // If a filter is specified, the search looks for the specific panel in that AZ.
-        query["patchpanel"] = pp;
-        Xconn.find(query, function(err, panels){
-          console.log(panels);
+        query["_patchpanel"] = pp;
+        PatchPanel.find(query, function(err, docs){
+          res.render("resultpptracker.ejs", {
+            patchpanel: docs,
+            az: az
+          });
         });
       }
     }
   });
 
 });
+
+
+
 
 // Add circuit route.
 app.post("/addcircuit", function(req, res) {
@@ -344,26 +332,29 @@ app.post("/addcircuit", function(req, res) {
 app.post("/addpp", function(req, res) {
   const patchPanel = _.toLower(req.body.patchPanelId);
   const capacity = req.body.capacity;
-  const az = _.toLower(req.body.az);
+  const rack = _.toLower(req.body.rack);
+
+  if (rack[4] === ".") {
+    var az = _.toLower(rack.slice(0, 4));
+  } else {
+    var az = _.toLower(device.slice(0, 5));
+  }
+
   const cluster = az.slice(0, 3);
 
-  Az.countDocuments({
-    _id: az
-  }, function(err, foundAz) {
+  Az.countDocuments({_id: az}, function(err, foundAz) {
     if (foundAz === 0) {
       res.render("fail.ejs", {
         fail: "There's no AZ for panel " + _.toUpper(patchPanel),
         route: "/add"
       });
     } else if (foundAz === 1) {
-      PatchPanel.countDocuments({
-        _patchpanel: patchPanel,
-        az: az
-      }, function(err, foundPatchPanel) {
+      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel) {
         if (foundPatchPanel === 0) {
           const newPatchPanel = new PatchPanel({
             _patchpanel: patchPanel,
             capacity: capacity,
+            rack: rack,
             az: az,
             cluster: cluster
           });
