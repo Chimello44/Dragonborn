@@ -8,7 +8,11 @@ const json2xls = require('json2xls');
 
 const fs = require("fs");
 
+const favicon = require('serve-favicon');
+
 const app = express();
+
+app.use(favicon(__dirname + '/public/images/favicon.ico'));
 
 // Creating the engine views to render EJS files from "views" folder.
 app.set('views engine', 'ejs');
