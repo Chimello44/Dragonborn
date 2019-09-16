@@ -68,7 +68,8 @@ const circuitSchema = new mongoose.Schema({
   patchpanel: String,
   patchpanelport: String,
   az: String,
-  cluster: String
+  cluster: String,
+  ticket: String
 });
 
 const patchPanelSchema = new mongoose.Schema({
@@ -112,7 +113,7 @@ const Cluster = mongoose.model("Cluster", clusterSchema);
 
 
 
-function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate, res) {
+function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res) {
   Az.countDocuments({
     _id: az
   }, function(err, foundAz) {
@@ -133,7 +134,8 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                     device: device,
                     interface: interface,
                     az: az,
-                    cluster: device.slice(0, 3)
+                    cluster: device.slice(0, 3),
+                    ticket: ticket
                   });
                   newCircuit.save();
                   res.render("success.ejs", {
@@ -208,6 +210,7 @@ app.post("/result", function(req, res) {
   const valueOfData = _.toLower(req.body.inputForm).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const queryOption = _.toLower(req.body.queryOption);
   const queryParameter = _.toLower(req.body.queryParameter);
+  const ticket = _.toLower(req.body.ticket);
 
   const query = {};
   const searchTitle = _.toUpper(valueOfData);
@@ -309,6 +312,7 @@ app.post("/addcircuit", function(req, res) {
   const patchPanelPort = _.toLower(req.body.patchPanelPort);
   const device = _.toLower(req.body.device);
   const interface = _.toLower(req.body.interface);
+  const ticket = _.toLower(req.body.ticket);
 
   const cluster = device.slice(0, 3);
 
@@ -321,7 +325,7 @@ app.post("/addcircuit", function(req, res) {
   const actionAddUpdate = req.body.page;
 
   // function Add Circuit
-  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, actionAddUpdate, res);
+  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res);
 
 });
 

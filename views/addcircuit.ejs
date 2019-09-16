@@ -8,6 +8,12 @@
 
     <form action="/addcircuit" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
       <input type="hidden" name="page" value="addcircuit">
+
+      <div class="row">
+        <label for="">Ticket Number</label>
+        <input class="form-control" type="text" name="ticket" autocomplete="off" placeholder="" autofocus="true" required />
+      </div>
+
       <div class="row">
         <label for="">Circuit ID</label>
         <input class="form-control" type="text" name="serialId" autocomplete="off" placeholder="" autofocus="true" required />
