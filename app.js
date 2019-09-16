@@ -337,7 +337,7 @@ app.post("/addpp", function(req, res) {
   if (rack[4] === ".") {
     var az = _.toLower(rack.slice(0, 4));
   } else {
-    var az = _.toLower(device.slice(0, 5));
+    var az = _.toLower(rack.slice(0, 5));
   }
 
   const cluster = az.slice(0, 3);
@@ -442,10 +442,27 @@ app.post("/updatecircuit", function(req, res) {
   const updateSerialID = _.toLower(req.body.inputUpdate);
   const inputForm = _.toLower(req.body.inputForm);
   Xconn.find({_circuit: updateSerialID, az: inputForm}, function(err, result) {
-    res.render("updatecircuit.ejs", {
-      connection: result,
-      skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-    });
+    if (err) {
+      console.log(err);
+    } else {
+      if (result.length === 0) {
+        res.render("fail.ejs", {
+          fail: "Circuit ID " + updateSerialID + " hasn't been found.",
+          route: "/update"
+        });
+      } else if (result.length === 1) {
+        res.render("updatecircuit.ejs", {
+          connection: result,
+          skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+        });
+      } else {
+        res.render("fail.ejs", {
+          fail: "Circuit ID " + updateSerialID + " is duplicated.",
+          route: "/update"
+        });
+      }
+    }
+
   });
 });
 
@@ -480,10 +497,9 @@ app.post("/update", function(req, res) {
 
 // Collect the circuit ID which will be decommissioned.
 app.post("/delete", function(req, res) {
-  const deleteSerialId = req.body.inputDelete;
-  Xconn.find({
-    _circuit: deleteSerialId
-  }, function(err, result) {
+  const deleteSerialId = _.toLower(req.body.inputDelete);
+  const az = _.toLower(req.body.az);
+  Xconn.find({_circuit: deleteSerialId, az: az}, function(err, result) {
     if (err) {
       console.log(err);
     } else {
@@ -493,12 +509,12 @@ app.post("/delete", function(req, res) {
         });
       } else if (result.length === 0) {
         res.render("fail.ejs", {
-          fail: deleteSerialId + " hasn't been found.",
+          fail: "Circuit ID " + deleteSerialId + " hasn't been found.",
           route: "/delete"
         });
       } else {
         res.render("fail.ejs", {
-          fail: deleteSerialId + " is duplicated.",
+          fail: "Circuit ID " + deleteSerialId + " is duplicated.",
           route: "/delete"
         });
       }
