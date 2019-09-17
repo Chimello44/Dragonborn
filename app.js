@@ -275,6 +275,8 @@ app.post("/result", function(req, res) {
         });
       } else {
         Xconn.find(query, function(err, connection) {
+          downloadSearch = connection;
+          csvWriter.writeRecords(downloadSearch).then(() => console.log("CSV file saved."));
           res.render("result.ejs", {
             connection: connection,
             valueOfData: searchTitle,
