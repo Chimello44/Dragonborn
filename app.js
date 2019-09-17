@@ -6,6 +6,8 @@ const _ = require("lodash");
 
 const json2xls = require('json2xls');
 
+const createCsvWriter = require('csv-writer').createObjectCsvWriter;
+
 const fs = require("fs");
 
 const favicon = require('serve-favicon');
@@ -208,8 +210,28 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
 
 // POST METHODS.
 
+let downloadSearch;
 // Search results route.
 app.post("/result", function(req, res) {
+
+  const csvWriter = createCsvWriter({
+    path: 'report.csv',
+    header: [
+      {id: 'cluster', title: 'Cluster'},
+      {id: 'az', title: 'AZ'},
+      {id: '_circuit', title: 'Cross-Connect ID'},
+      {id: 'serviceprovider', title: 'Service Provider / Peer'},
+      {id: 'bandwidth', title: 'Bandwidth (Gbps)'},
+      {id: 'device', title: 'Device'},
+      {id: 'interface', title: 'Interface'},
+      {id: 'patchpanel', title: 'Patch-Panel'},
+      {id: 'patchpanelport', title: 'Patch-Panel Port'},
+      {id: 'ticket', title: "Ticket Number"}
+    ]
+  });
+
+  fs.truncate(__dirname + '/report.csv', 0, function(){console.log('deleted')});
+
   const typeOfData = _.toLower(req.body.queryClusterAZ);
   const valueOfData = _.toLower(req.body.inputForm).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const queryOption = _.toLower(req.body.queryOption);
@@ -228,6 +250,10 @@ app.post("/result", function(req, res) {
         });
       } else {
         Xconn.find(query, function(err, connection) {
+          downloadSearch = connection;
+          csvWriter.writeRecords(downloadSearch).then(() => console.log("CSV file saved."));
+          // console.log(downloadSearch);
+
           res.render("result.ejs", {
             connection: connection,
             valueOfData: searchTitle,
@@ -544,9 +570,6 @@ app.post("/deletecircuit", function(req, res) {
     var az = _.toLower(device.slice(0, 4));
   }
 
-
-
-
   Xconn.findOneAndDelete({
     _circuit: deleteSerialId
   }, function(err, doc) {
@@ -720,6 +743,15 @@ app.get("/report", function(req, res) {
   res.render("report.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
+});
+
+app.get("/downloadSearch", function(req, res){
+  // console.log(downloadSearch);
+  res.setHeader('Content-disposition', 'attachment; filename=report.csv');
+  res.setHeader('content-type', 'text/csv');
+  res.download(__dirname + '/report.csv');
+  // fs.truncate(__dirname + '/report.csv', 0, function(){console.log('deleted')});
+
 });
 
 

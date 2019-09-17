@@ -1,0 +1,4 @@
+Cluster,AZ,Cross-Connect ID,Service Provider / Peer,Bandwidth (Gbps),Device,Interface,Patch-Panel,Patch-Panel Port
+gru,gru1,1,google,100,gru1-br-cor-r3,et-0/0/11,pp1,1
+gru,gru1,2,microsoft,100,gru1-br-tra-r3,et-0/0/11,pp1,2
+gru,gru1,4,globenet,100,gru1-br-cor-r4,et-0/0/37,pp1,4
