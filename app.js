@@ -252,7 +252,6 @@ app.post("/result", function(req, res) {
         Xconn.find(query, function(err, connection) {
           downloadSearch = connection;
           csvWriter.writeRecords(downloadSearch).then(() => console.log("CSV file saved."));
-          // console.log(downloadSearch);
 
           res.render("result.ejs", {
             connection: connection,
@@ -271,7 +270,7 @@ app.post("/result", function(req, res) {
       if (docs === 0) {
         res.render("fail.ejs", {
           fail: "No data for your search. Make sure to provide an ID that match the filter specified.",
-          route: "/search"
+          route: "/searchcircuit"
         });
       } else {
         Xconn.find(query, function(err, connection) {
@@ -595,9 +594,28 @@ app.post("/deletecircuit", function(req, res) {
 
 // Generates a report
 app.post("/generatereport", function(req, res) {
+  console.log(req);
   const report = _.toLower(req.body.queryClusterAZ);
   const filter = _.toLower(req.body.inputForm);
   const result = [];
+
+  const csvWriter = createCsvWriter({
+    path: 'report.csv',
+    header: [
+      {id: 'cluster', title: 'Cluster'},
+      {id: 'az', title: 'AZ'},
+      {id: '_circuit', title: 'Cross-Connect ID'},
+      {id: 'serviceprovider', title: 'Service Provider / Peer'},
+      {id: 'bandwidth', title: 'Bandwidth (Gbps)'},
+      {id: 'device', title: 'Device'},
+      {id: 'interface', title: 'Interface'},
+      {id: 'patchpanel', title: 'Patch-Panel'},
+      {id: 'patchpanelport', title: 'Patch-Panel Port'},
+      {id: 'ticket', title: "Ticket Number"}
+    ]
+  });
+
+  fs.truncate(__dirname + '/report.csv', 0, function(){console.log('deleted')});
 
   if (report === "cluster") {
 
@@ -623,14 +641,22 @@ app.post("/generatereport", function(req, res) {
               // https://stackoverflow.com/questions/42003340/node-json2xls-downloadable-file
               // https://stackoverflow.com/questions/7288814/download-a-file-from-nodejs-server-using-express
 
-              app.use(json2xls.middleware);
-              var xls = json2xls(docs,{
-                fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
-              });
-              res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
-              res.setHeader('Content-type', 'text/xlsx');
-              fs.writeFileSync("report.xlsx", xls, "binary");
-              res.download("report.xlsx", "report.xlsx");
+              csvWriter.writeRecords(docs).then(() => console.log("CSV file saved."));
+
+              res.redirect("/downloadSearch");
+
+              // res.setHeader('Content-disposition', 'attachment; filename=report.csv');
+              // res.setHeader('content-type', 'text/csv');
+              // res.download(__dirname + '/report.csv');
+
+              // app.use(json2xls.middleware);
+              // var xls = json2xls(docs,{
+              //   fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
+              // });
+              // res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
+              // res.setHeader('Content-type', 'text/xlsx');
+              // fs.writeFileSync("report.xlsx", xls, "binary");
+              // res.download("report.xlsx", "report.xlsx");
 
             });
           }
@@ -660,14 +686,19 @@ app.post("/generatereport", function(req, res) {
             });
           } else {
             Xconn.find({az: filter}, function(err, docs){
-              app.use(json2xls.middleware);
-              var xls = json2xls(docs,{
-                fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
-              });
-              res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
-              res.setHeader('Content-type', 'text/xlsx');
-              fs.writeFileSync("report.xlsx", xls, "binary");
-              res.download("report.xlsx", "report.xlsx");
+
+              csvWriter.writeRecords(docs).then(() => console.log("CSV file saved."));
+
+              res.redirect("/downloadSearch");
+
+              // app.use(json2xls.middleware);
+              // var xls = json2xls(docs,{
+              //   fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
+              // });
+              // res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
+              // res.setHeader('Content-type', 'text/xlsx');
+              // fs.writeFileSync("report.xlsx", xls, "binary");
+              // res.download("report.xlsx", "report.xlsx");
             });
           }
         });
