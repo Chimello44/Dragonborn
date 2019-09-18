@@ -248,7 +248,7 @@ app.post("/result", function(req, res) {
     Xconn.countDocuments(query, function(err, docs){
       if (docs === 0) {
         res.render("fail.ejs", {
-          fail: "No data for your search. Perhaps your AZ does not have any circuits registered.",
+          fail: "No data for your search. Perhaps your AZ does not have any circuit registered.",
           route: "/search"
         });
       } else {
@@ -404,7 +404,7 @@ app.post("/addpp", function(req, res) {
         } else {
           res.render("success.ejs", {
             success: "Panel " + _.toUpper(patchPanel) + " already exists for " + _.toUpper(az) + ".",
-            route: "/add"
+            route: "/addpp"
           });
         }
       });

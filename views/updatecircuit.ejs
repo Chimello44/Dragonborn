@@ -9,24 +9,24 @@
     <form action="/update" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
       <input type="hidden" name="page" value="updatecircuit">
       <div class="row">
-        <label for="">Circuit ID</label>
+        <label for="">Cross-Connect ID</label>
         <input class="form-control" type="text" name="serialId" value="<%= ckt._circuit %>" placeholder="ABC123456" autocomplete="off" contenteditable="false" readonly />
       </div>
 
       <div class="row">
         <label for="">Service Provider / Peer</label>
-        <input class="form-control" type="text" name="serviceProvider" value="<%= ckt.serviceprovider %>" placeholder="Telefónica" autocomplete="off" readonly />
+        <input class="form-control" type="text" name="serviceProvider" value="<%= ckt.serviceprovider %>" autocomplete="off" readonly />
       </div>
 
       <div class="row">
         <label for="">Bandwidth</label>
-        <input class="form-control" type=Number name="bandwidth" value="<%= ckt.bandwidth %>" autocomplete="off" placeholder="100" required />
+        <input class="form-control" type=Number name="bandwidth" value="<%= ckt.bandwidth %>" autocomplete="off" required />
       </div>
 
       <div class="row">
         <div class="col">
-          <label for="">Patch-Panel</label>
-          <input type="text" name="patchPanel" class="form-control" value="<%= ckt.patchpanel %>" placeholder="PP45" autocomplete="off" required />
+          <label for="">Patch-Panel ID</label>
+          <input type="text" name="patchPanel" class="form-control" value="<%= ckt.patchpanel %>" autocomplete="off" required />
         </div>
 
         <div class="col">
@@ -37,12 +37,12 @@
 
       <div class="row">
         <div class="col">
-          <label for="">Device (hostname)</label>
+          <label for="">Device's hostname</label>
           <input type="text" name="device" class="form-control" value="<%= ckt.device %>" placeholder="gru1-br-cor-r3" autocomplete="off" required />
         </div>
 
         <div class="col">
-          <label for="">Device Interface</label>
+          <label for="">Device's interface</label>
           <input type="text" name="interface" class="form-control" value="<%= ckt.interface %>" placeholder="et-0/0/11" autocomplete="off" required />
         </div>
       </div>
