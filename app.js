@@ -4,8 +4,6 @@ const mongoose = require("mongoose");
 const ejs = require("ejs");
 const _ = require("lodash");
 
-const json2xls = require('json2xls');
-
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
 const fs = require("fs");
@@ -50,13 +48,6 @@ function randomSkyrimPhrase(max) {
   return Math.floor(Math.random() * max);
 }
 
-// const clusters = [
-//   "ARN", "BJS", "BOM", "CDG", "CMH", "DCA", "DUB", "FRA", "GIG",  "IAD", "ICN", "KIX", "HKG", "LHR", "LCK", "LUX", "MXP", "NRT", "OSU", "PDT", "PDX", "PEK", "SEA", "SFO", "SIN", "SYD", "YUL", "ZHY"
-// ];
-//
-// const sites = ["gru1", "gru2", "gru3", "iad50"];
-
-
 
 
 
@@ -65,7 +56,6 @@ const circuitSchema = new mongoose.Schema({
   _circuit: {
     type: String,
     required: true,
-    // unique: true
   },
   serviceprovider: String,
   bandwidth: Number,
@@ -82,7 +72,6 @@ const patchPanelSchema = new mongoose.Schema({
   _patchpanel: {
     type: String,
     required: true,
-    // index: true
   },
   capacity: Number,
   rack: String,
@@ -181,15 +170,10 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
               }
 
             } else {
-              console.log("FUCK");
               res.render("fail.ejs", {
                 fail: "No capacity to deploy new circuits on panel " + _.toUpper(patchPanel) + ".",
                 route: "/add"
               });
-              // res.render("fail.ejs", {
-              //   fail: "No capacity to deploy new circuits on panel " + _.toUpper(patchPanel) + ".",
-              //   route: "/add"
-              // });
             }
           });
         } else {
@@ -233,7 +217,7 @@ app.post("/result", function(req, res) {
     ]
   });
 
-  fs.truncate(__dirname + '/report.csv', 0, function(){console.log('deleted')});
+  fs.truncate(__dirname + '/report.csv', 0, function(){});
 
   const typeOfData = _.toLower(req.body.queryClusterAZ);
   const valueOfData = _.toLower(req.body.inputForm).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -254,8 +238,7 @@ app.post("/result", function(req, res) {
       } else {
         Xconn.find(query, function(err, connection) {
           downloadSearch = connection;
-          csvWriter.writeRecords(downloadSearch).then(() => console.log("CSV file saved."));
-
+          csvWriter.writeRecords(downloadSearch);
           res.render("result.ejs", {
             connection: connection,
             valueOfData: searchTitle,
@@ -278,7 +261,7 @@ app.post("/result", function(req, res) {
       } else {
         Xconn.find(query, function(err, connection) {
           downloadSearch = connection;
-          csvWriter.writeRecords(downloadSearch).then(() => console.log("CSV file saved."));
+          csvWriter.writeRecords(downloadSearch);
           res.render("result.ejs", {
             connection: connection,
             valueOfData: searchTitle,
@@ -598,7 +581,6 @@ app.post("/deletecircuit", function(req, res) {
 
 // Generates a report
 app.post("/generatereport", function(req, res) {
-  console.log(req);
   const report = _.toLower(req.body.queryClusterAZ);
   const filter = _.toLower(req.body.inputForm);
   const result = [];
@@ -619,7 +601,7 @@ app.post("/generatereport", function(req, res) {
     ]
   });
 
-  fs.truncate(__dirname + '/report.csv', 0, function(){console.log('deleted')});
+  fs.truncate(__dirname + '/report.csv', 0, function(){});
 
   if (report === "cluster") {
 
@@ -639,28 +621,9 @@ app.post("/generatereport", function(req, res) {
           } else {
             Xconn.find({cluster: filter}, function(err, docs) {
 
-              // https://stackabuse.com/reading-and-writing-csv-files-with-node-js/
-
-              // https://www.npmjs.com/package/json2xls
-              // https://stackoverflow.com/questions/42003340/node-json2xls-downloadable-file
-              // https://stackoverflow.com/questions/7288814/download-a-file-from-nodejs-server-using-express
-
-              csvWriter.writeRecords(docs).then(() => console.log("CSV file saved."));
-
+              // Generates the file the redirects to downloadSearch, which is a get method to download the file.
+              csvWriter.writeRecords(docs);
               res.redirect("/downloadSearch");
-
-              // res.setHeader('Content-disposition', 'attachment; filename=report.csv');
-              // res.setHeader('content-type', 'text/csv');
-              // res.download(__dirname + '/report.csv');
-
-              // app.use(json2xls.middleware);
-              // var xls = json2xls(docs,{
-              //   fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
-              // });
-              // res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
-              // res.setHeader('Content-type', 'text/xlsx');
-              // fs.writeFileSync("report.xlsx", xls, "binary");
-              // res.download("report.xlsx", "report.xlsx");
 
             });
           }
@@ -691,18 +654,9 @@ app.post("/generatereport", function(req, res) {
           } else {
             Xconn.find({az: filter}, function(err, docs){
 
-              csvWriter.writeRecords(docs).then(() => console.log("CSV file saved."));
-
+              csvWriter.writeRecords(docs);
               res.redirect("/downloadSearch");
 
-              // app.use(json2xls.middleware);
-              // var xls = json2xls(docs,{
-              //   fields: ['az', 'cluster', '_circuit', 'serviceprovider', 'bandwidth', 'device', 'interface', 'patchpanel', "patchpanelport"]
-              // });
-              // res.setHeader('Content-disposition', 'attachment; filename=report.xlsx');
-              // res.setHeader('Content-type', 'text/xlsx');
-              // fs.writeFileSync("report.xlsx", xls, "binary");
-              // res.download("report.xlsx", "report.xlsx");
             });
           }
         });
@@ -783,12 +737,9 @@ app.get("/report", function(req, res) {
 });
 
 app.get("/downloadSearch", function(req, res){
-  // console.log(downloadSearch);
   res.setHeader('Content-disposition', 'attachment; filename=report.csv');
   res.setHeader('content-type', 'text/csv');
   res.download(__dirname + '/report.csv');
-  // fs.truncate(__dirname + '/report.csv', 0, function(){console.log('deleted')});
-
 });
 
 
