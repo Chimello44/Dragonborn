@@ -305,7 +305,6 @@ app.post("/resultpptracker", function(req, res){
           });
         });
       } else if (pp !== "" && type !== "") {
-        console.log("PP and TYPE are not empty" + "type: " + type);
         // If a filter is specified, the search looks for the specific panel in that AZ.
         query["_patchpanel"] = pp;
         query["type"] = type;
@@ -325,7 +324,6 @@ app.post("/resultpptracker", function(req, res){
           }
         });
       } else if (pp === "" && type !== ""){
-        console.log("TYPE is not empty");
         query["type"] = type;
         PatchPanel.countDocuments(query, function(err, docs){
           if (docs === 0) {
@@ -362,7 +360,6 @@ app.post("/resultpptracker", function(req, res){
       }
     }
   });
-
 });
 
 
