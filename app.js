@@ -76,7 +76,8 @@ const patchPanelSchema = new mongoose.Schema({
   capacity: Number,
   rack: String,
   az: String,
-  cluster: String
+  cluster: String,
+  type: String
 });
 
 const azSchema = new mongoose.Schema({
@@ -282,6 +283,7 @@ app.post("/result", function(req, res) {
 app.post("/resultpptracker", function(req, res){
   const az = _.toLower(req.body.inputForm);
   const pp = _.toLower(req.body.pp);
+  const type = req.body.connectionType;
 
   const query = {};
   query["az"] = az;
@@ -295,15 +297,34 @@ app.post("/resultpptracker", function(req, res){
       });
     } else {
       // If there's no filter, the search looks for all panels inside the AZ.
-      if (pp === "") {
+      if (pp === "" && type === "") {
         PatchPanel.find(query, function(err, docs){
           res.render("resultpptracker.ejs", {
             patchpanel: docs,
             az: _.toUpper(az)
           });
         });
-      } else {
+      } else if (pp !== "" && type !== "") {
+        console.log("PP and TYPE are not empty" + "type: " + type);
         // If a filter is specified, the search looks for the specific panel in that AZ.
+        query["_patchpanel"] = pp;
+        query["type"] = type;
+        PatchPanel.find(query, function(err, docs){
+          res.render("resultpptracker.ejs", {
+            patchpanel: docs,
+            az: az
+          });
+        });
+      } else if (pp === "" && type !== ""){
+        console.log("TYPE is not empty");
+        query["type"] = type;
+        PatchPanel.find(query, function(err, docs){
+          res.render("resultpptracker.ejs", {
+            patchpanel: docs,
+            az: az
+          });
+        });
+      } else {
         query["_patchpanel"] = pp;
         PatchPanel.find(query, function(err, docs){
           res.render("resultpptracker.ejs", {
@@ -354,6 +375,7 @@ app.post("/addpp", function(req, res) {
   const patchPanel = _.toLower(req.body.patchPanelId);
   const capacity = req.body.capacity;
   const rack = _.toLower(req.body.rack);
+  const type = req.body.connectionType;
 
   if (rack[4] === ".") {
     var az = _.toLower(rack.slice(0, 4));
@@ -377,7 +399,8 @@ app.post("/addpp", function(req, res) {
             capacity: capacity,
             rack: rack,
             az: az,
-            cluster: cluster
+            cluster: cluster,
+            type: type
           });
           newPatchPanel.save();
           res.render("success.ejs", {

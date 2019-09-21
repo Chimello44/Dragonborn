@@ -7,24 +7,29 @@
 
     <form action="/addpp" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');">
       <div class="row">
-          <label for="">Patch-Panel ID:</label>
-          <input type="text" name="patchPanelId" class="form-control" placeholder="Patch-Panel ID" autocomplete="off" autofocus="true" required>
+        <label for="">Patch-Panel ID:</label>
+        <input type="text" name="patchPanelId" class="form-control" placeholder="Patch-Panel ID" autocomplete="off" autofocus="true" required>
       </div>
 
       <div class="row">
-          <label for="">Quantity of ports (1 port = 2 pairs):</label>
-          <input class="form-control" type=Number name="capacity" placeholder="Number of available ports" autocomplete="off" required />
+        <label for="">Quantity of ports (1 port = 2 pairs):</label>
+        <input class="form-control" type=Number name="capacity" placeholder="Number of available ports" autocomplete="off" required />
       </div>
 
       <div class="row">
-          <label for="">Rack Position (az.room.rack):</label>
-          <input type="text" name="rack" class="form-control" placeholder="gru1.1-3.11000" autocomplete="off" autofocus="true" required>
+        <label for="">Rack Position (az.room.rack):</label>
+        <input type="text" name="rack" class="form-control" placeholder="gru1.1-3.11000" autocomplete="off" autofocus="true" required>
       </div>
 
-      <!-- <div class="row">
-          <label for="">Enter the AZ:</label>
-          <input type="text" name="az" class="form-control" placeholder="gru1" autocomplete="off" required>
-      </div> -->
+      <div class="row">
+        <label for="">Select the connection type for this Patch-Panel:</label>
+        <select class="custom-select" name="connectionType" required>
+          <option value=""></option>
+          <option value="lc">LC</option>
+          <option value="sc">SC</option>
+          <option value="utp">UTP</option>
+        </select>
+      </div>
 
       <div>
         <button class="row btn btn-secondary btn-lg btn-block" type="submit">Add</button>
