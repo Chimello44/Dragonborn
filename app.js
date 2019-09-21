@@ -309,28 +309,55 @@ app.post("/resultpptracker", function(req, res){
         // If a filter is specified, the search looks for the specific panel in that AZ.
         query["_patchpanel"] = pp;
         query["type"] = type;
-        PatchPanel.find(query, function(err, docs){
-          res.render("resultpptracker.ejs", {
-            patchpanel: docs,
-            az: az
-          });
+        PatchPanel.countDocuments(query, function(err, docs){
+          if (docs === 0) {
+            res.render("fail.ejs", {
+              fail: _.toUpper(az) + " doesn't have a Patch-Panel with " + _.toUpper(type) + " connections under the ID " + _.toUpper(pp),
+              route: "/search"
+            });
+          } else {
+            PatchPanel.find(query, function(err, docs){
+              res.render("resultpptracker.ejs", {
+                patchpanel: docs,
+                az: az
+              });
+            });
+          }
         });
       } else if (pp === "" && type !== ""){
         console.log("TYPE is not empty");
         query["type"] = type;
-        PatchPanel.find(query, function(err, docs){
-          res.render("resultpptracker.ejs", {
-            patchpanel: docs,
-            az: az
-          });
+        PatchPanel.countDocuments(query, function(err, docs){
+          if (docs === 0) {
+            res.render("fail.ejs", {
+              fail: _.toUpper(az) + " doesn't have a Patch-Panels with " + _.toUpper(type) + " connections",
+              route: "/search"
+            });
+          } else {
+            PatchPanel.find(query, function(err, docs){
+              res.render("resultpptracker.ejs", {
+                patchpanel: docs,
+                az: az
+              });
+            });
+          }
         });
       } else {
         query["_patchpanel"] = pp;
-        PatchPanel.find(query, function(err, docs){
-          res.render("resultpptracker.ejs", {
-            patchpanel: docs,
-            az: az
-          });
+        PatchPanel.countDocuments(query, function(err, docs){
+          if (docs === 0) {
+            res.render("fail.ejs", {
+              fail: _.toUpper(az) + " doesn't have a Patch-Panel with the ID of " + _.toUpper(pp),
+              route: "/search"
+            });
+          } else {
+            PatchPanel.find(query, function(err, docs){
+              res.render("resultpptracker.ejs", {
+                patchpanel: docs,
+                az: az
+              });
+            });
+          }
         });
       }
     }
