@@ -684,13 +684,16 @@ app.post("/generatereport", function(req, res) {
               route: "/report"
             });
           } else {
+
+            const sort = {az: 1}; // 1 = increase.
+
             Xconn.find({cluster: filter}, function(err, docs) {
 
               // Generates the file the redirects to downloadSearch, which is a get method to download the file.
               csvWriter.writeRecords(docs);
               res.redirect("/downloadSearch");
 
-            });
+            }).sort(sort); // Sorts the database values by alphabetic order.
           }
         });
       } else {
