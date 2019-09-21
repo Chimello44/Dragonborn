@@ -109,7 +109,7 @@ const Cluster = mongoose.model("Cluster", clusterSchema);
 
 
 
-function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res) {
+function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res) {
   Az.countDocuments({_id: az}, function(err, foundAz) {
     if (foundAz === 1) {
       PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel) {
@@ -147,6 +147,9 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
 
             } else if ((doc.capacity > 0) && (actionAddUpdate === "updatecircuit")) {
               if (foundPatchPanel === 1) {
+
+                PatchPanel.findOneAndUpdate({az: az, _patchpanel: oldPatchPanel}, {$inc: {capacity: 1}}, function(err, doc) {});
+
                 Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
                   _circuit: serialId,
                   serviceprovider: serviceProvider,
@@ -158,6 +161,12 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                   az: az,
                   cluster: device.slice(0, 3)
                 }, function(err, doc) {
+
+
+                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, doc) {});
+
+
+
                   res.render("success.ejs", {
                     success: "Circuit ID " + _.toUpper(serialId) + " updated",
                     route: "/update"
@@ -375,6 +384,7 @@ app.post("/addcircuit", function(req, res) {
   const device = _.toLower(req.body.device);
   const interface = _.toLower(req.body.interface);
   const ticket = _.toLower(req.body.ticket);
+  let oldPatchPanel;
 
   const cluster = device.slice(0, 3);
 
@@ -387,7 +397,7 @@ app.post("/addcircuit", function(req, res) {
   const actionAddUpdate = req.body.page;
 
   // function Add Circuit
-  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res);
+  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res);
 
 });
 
@@ -548,6 +558,8 @@ app.post("/update", function(req, res) {
   const interface = _.toLower(req.body.interface);
   const ticket = _.toLower(req.body.ticket);
 
+  let oldPatchPanel;
+
   const cluster = device.slice(0, 3);
 
   if (device[5] === "-") {
@@ -556,9 +568,15 @@ app.post("/update", function(req, res) {
     var az = _.toLower(device.slice(0, 4));
   }
 
-  const actionAddUpdate = req.body.page;
+  Xconn.findOne({_circuit: serialId, az: az}, function(err, doc){
+    oldPatchPanel = doc.patchpanel;
 
-  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res);
+    const actionAddUpdate = req.body.page;
+
+    addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res);
+  });
+
+
 });
 
 
