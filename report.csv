@@ -1,5 +1,4 @@
 Cluster,AZ,Cross-Connect ID,Service Provider / Peer,Bandwidth (Gbps),Device,Interface,Patch-Panel,Patch-Panel Port,Ticket Number
-gru,gru3,1,globenet,100,gru3-br-cor-r3,et-0/0/37,pp1,1,0411084275
 gru,gru3,2,globenet,100,gru3-br-cor-r4,et-0/0/37,pp1,2,0411084275
 gru,gru3,3,ascenty,10,gru3-br-tra-r3,et-0/0/37,pp1,3,0410810169
 gru,gru3,4,ascenty,10,gru3-br-tra-r4,et-0/0/37,pp1,4,0410810169
