@@ -133,19 +133,19 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                   });
                   newCircuit.save();
                   res.render("success.ejs", {
-                    success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az + "."),
+                    success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az),
                     route: "/addcircuit"
                   });
                   PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, doc) {});
                 } else {
                   res.render("fail.ejs", {
-                    fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az) + ".",
+                    fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az),
                     route: "/addcircuit"
                   });
                 }
               });
 
-            } else if (actionAddUpdate === "updatecircuit") {
+            } else if ((doc.capacity > 0) && (actionAddUpdate === "updatecircuit")) {
               if (foundPatchPanel === 1) {
                 Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
                   _circuit: serialId,
@@ -159,7 +159,7 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                   cluster: device.slice(0, 3)
                 }, function(err, doc) {
                   res.render("success.ejs", {
-                    success: "Circuit ID " + _.toUpper(serialId) + " updated.",
+                    success: "Circuit ID " + _.toUpper(serialId) + " updated",
                     route: "/update"
                   });
                 });
@@ -167,12 +167,12 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
                 res.render("fail.ejs", {
                   success: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
                   route: "/update"
-                })
+                });
               }
 
             } else {
               res.render("fail.ejs", {
-                fail: "No capacity to deploy new circuits on panel " + _.toUpper(patchPanel) + ".",
+                fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
                 route: "/add"
               });
             }
@@ -186,7 +186,7 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, patchPanel
       });
     } else {
       res.render("fail.ejs", {
-        fail: _.toUpper(az) + " is not registered.",
+        fail: _.toUpper(az) + " is not registered",
         route: "/add"
       });
     }
@@ -233,7 +233,7 @@ app.post("/result", function(req, res) {
     Xconn.countDocuments(query, function(err, docs){
       if (docs === 0) {
         res.render("fail.ejs", {
-          fail: "No data for your search. Perhaps your AZ does not have any circuit registered.",
+          fail: "No data for your search. Perhaps your AZ does not have any circuit registered",
           route: "/search"
         });
       } else {
@@ -256,7 +256,7 @@ app.post("/result", function(req, res) {
     Xconn.countDocuments(query, function(err, docs){
       if (docs === 0) {
         res.render("fail.ejs", {
-          fail: "No data for your search. Make sure to provide an ID that match the filter specified.",
+          fail: "No data for your search. Make sure to provide an value that match the filter specified",
           route: "/searchcircuit"
         });
       } else {
@@ -292,7 +292,7 @@ app.post("/resultpptracker", function(req, res){
   PatchPanel.countDocuments(query, function(err, docs){
     if (docs === 0) {
       res.render("fail.ejs", {
-        fail: _.toUpper(az) + " doesn't have Patch-Panels registered.",
+        fail: _.toUpper(az) + " doesn't have Patch-Panels registered",
         route: "/search"
       });
     } else {
@@ -433,7 +433,7 @@ app.post("/addpp", function(req, res) {
           });
         } else {
           res.render("success.ejs", {
-            success: "Panel " + _.toUpper(patchPanel) + " already exists for " + _.toUpper(az) + ".",
+            success: "Panel " + _.toUpper(patchPanel) + " already exists for " + _.toUpper(az),
             route: "/addpp"
           });
         }
@@ -465,19 +465,19 @@ app.post("/addAz", function(req, res) {
           });
           newAz.save();
           res.render("success.ejs", {
-            success: _.toUpper(az) + " added to database.",
+            success: _.toUpper(az) + " added to database",
             route: "/add"
           });
 
         } else if (foundAz === 1) {
           res.render("fail.ejs", {
-            fail: _.toUpper(az) + " already created.",
+            fail: _.toUpper(az) + " already created",
             route: "/add"
           });
 
         } else {
           res.render("fail.ejs", {
-            fail: _.toUpper(az) + " duplicated.",
+            fail: _.toUpper(az) + " duplicated",
             route: "/add"
           });
         }
@@ -495,7 +495,7 @@ app.post("/addAz", function(req, res) {
       });
       newAz.save();
       res.render("success.ejs", {
-        success: _.toUpper(az) + " added to database.",
+        success: _.toUpper(az) + " added to database",
         route: "/add"
       });
     }
@@ -515,7 +515,7 @@ app.post("/updatecircuit", function(req, res) {
     } else {
       if (result.length === 0) {
         res.render("fail.ejs", {
-          fail: "Circuit ID " + updateSerialID + " hasn't been found.",
+          fail: "Circuit ID " + updateSerialID + " hasn't been found",
           route: "/update"
         });
       } else if (result.length === 1) {
@@ -525,7 +525,7 @@ app.post("/updatecircuit", function(req, res) {
         });
       } else {
         res.render("fail.ejs", {
-          fail: "Circuit ID " + updateSerialID + " is duplicated.",
+          fail: "Circuit ID " + updateSerialID + " is duplicated",
           route: "/update"
         });
       }
@@ -578,12 +578,12 @@ app.post("/delete", function(req, res) {
         });
       } else if (result.length === 0) {
         res.render("fail.ejs", {
-          fail: "Circuit ID " + deleteSerialId + " hasn't been found.",
+          fail: "Circuit ID " + deleteSerialId + " hasn't been found",
           route: "/delete"
         });
       } else {
         res.render("fail.ejs", {
-          fail: "Circuit ID " + deleteSerialId + " is duplicated.",
+          fail: "Circuit ID " + deleteSerialId + " is duplicated",
           route: "/delete"
         });
       }
@@ -617,7 +617,7 @@ app.post("/deletecircuit", function(req, res) {
       }
     }, function(err, doc) {});
     res.render("success.ejs", {
-      success: "Circuit ID " + doc._circuit + " has been decommissioned.",
+      success: "Circuit ID " + doc._circuit + " has been decommissioned",
       route: "/delete"
     });
   });
@@ -655,14 +655,14 @@ app.post("/generatereport", function(req, res) {
     Cluster.countDocuments({_id: filter}, function(err, foundCluster){
       if (foundCluster === 0) {
         res.render("fail.ejs", {
-          fail: _.toUpper(filter) + " is not registered.",
+          fail: _.toUpper(filter) + " is not registered",
           route: "/report"
         });
       } else if (foundCluster === 1) {
         Xconn.countDocuments({cluster: filter}, function(err, foundCircuits){
           if(foundCircuits === 0){
             res.render("fail.ejs", {
-              fail: _.toUpper(filter) + " doesn't have cross-connect circuits registered.",
+              fail: _.toUpper(filter) + " doesn't have cross-connect circuits registered",
               route: "/report"
             });
           } else {
@@ -677,7 +677,7 @@ app.post("/generatereport", function(req, res) {
         });
       } else {
         res.render("fail.ejs", {
-          fail: _.toUpper(filter) + " is duplicated.",
+          fail: _.toUpper(filter) + " is duplicated",
           route: "/report"
         });
       }
@@ -688,14 +688,14 @@ app.post("/generatereport", function(req, res) {
     Az.countDocuments({_id: filter}, function(err, foundAz){
       if (foundAz === 0) {
         res.render("fail.ejs", {
-          fail: _.toUpper(filter) + " is not registered.",
+          fail: _.toUpper(filter) + " is not registered",
           route: "/report"
         });
       } else if (foundAz === 1) {
         Xconn.countDocuments({az: filter}, function(err, foundCircuits){
           if (foundCircuits === 0) {
             res.render("fail.ejs", {
-              fail: _.toUpper(filter) + " doesn't have cross-connect circuits registered.",
+              fail: _.toUpper(filter) + " doesn't have cross-connect circuits registered",
               route: "/report"
             });
           } else {
@@ -709,7 +709,7 @@ app.post("/generatereport", function(req, res) {
         });
       } else {
         res.render("fail.ejs", {
-          fail: _.toUpper(filter) + " is duplicated.",
+          fail: _.toUpper(filter) + " is duplicated",
           route: "/report"
         });
       }
