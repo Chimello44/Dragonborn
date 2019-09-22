@@ -1,0 +1,45 @@
+<%- include("header"); -%>
+<div class="title-result">
+  <h2>Patch-Panel Record(s) for <%= az %> </h2>
+</div>
+<div class="container">
+
+  <div class="row">
+  <% patchpanel.forEach(function(panel){ %>
+
+
+
+      <div class="col-lg-4 center">
+        <div class="card-deck">
+
+          <div class="card text-center mb-3">
+            <!-- <div class="card-header">PatchPanel name</div> -->
+            <div class="card-body">
+              <h5 class="card-title">Patch-Panel ID: <%= panel._patchpanel %></h5>
+              <p class="text-secondary card-text">Rack: <%= panel.rack %></p>
+              <p class="text-secondary card-text">Connection type: <%= panel.type %></p>
+              <p class="bar card-text rackCapacity" name="capacity">Current capacity: <%= panel.capacity %></p>
+              <form class="" action="/confirmdeletepp" method="post">
+                <div class="row">
+                  <input type="hidden" name="az" value="<%=panel.az%>">
+                  <input type="hidden" name="patchpanel" value="<%=panel._patchpanel%>">
+                  <button class="ppdecom btn btn-secondary btn-lg btn-block" type="submit" name="submit">Decommission</button>
+                </div>
+              </form>
+
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+  <% }); %>
+  </div>
+
+  <div class="return-button">
+    <a href="/delete" class="btn btn-outline-secondary">Return</a>
+  </div>
+
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+<script src="script.js" charset="utf-8"></script>

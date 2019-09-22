@@ -1,0 +1,26 @@
+<%- include("header.ejs"); -%>
+
+
+<div class="body">
+  <div class="body-content">
+    <h2 class="title">Fill in the Patch-Panel ID you wish to decommission and the AZ it belongs to.</h2>
+    <p class="text-secondary"><%= skyrimPhrases %></p>
+    <form class="searchForm" action="/deletepp" method="post">
+      <div class="row">
+        <label for="">Patch-Panel ID:</label>
+        <input class="form-control" type="text" name="inputDelete" autocomplete="off" autofocus="true" required>
+      </div>
+
+      <div class="row">
+        <label for="">Enter the AZ which the ID belongs to:</label>
+        <input class="form-control" type="text" name="az" autocomplete="off" autofocus="true" required>
+      </div>
+
+      <button class="row btn btn-secondary btn-lg btn-block" type="submit" name="updateButton" href="/updatecircuit">Search</button>
+
+
+    </form>
+  </div>
+
+
+<%- include("footer.ejs"); -%>

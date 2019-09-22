@@ -1,6 +1,0 @@
-Cluster,AZ,Cross-Connect ID,Service Provider / Peer,Bandwidth (Gbps),Device,Interface,Patch-Panel,Patch-Panel Port,Ticket Number
-gru,gru1,2,telefonica,100,gru1-br-cor-r4,et-0/0/11,pp7,2,
-gru,gru1,3,globenet,100,gru1-br-cor-r3,et-0/0/49,pp1,3,
-gru,gru1,4,globenet,100,gru1-br-cor-r4,et-0/0/49,pp1,4,
-gru,gru1,5,google,100,gru1-br-cor-r3,et-0/0/0,pp1,5,
-gru,gru1,224,telefonica,10,gru1-br-cor-r3,et-0/0/0,pp5,1,

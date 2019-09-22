@@ -152,3 +152,11 @@ td {
 .bg-almost {
   background-color: #feca57;
 }
+
+.center {
+  margin: 0 auto;
+}
+
+.ppdecom {
+  margin-top: 8%;
+}

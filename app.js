@@ -265,7 +265,7 @@ app.post("/result", function(req, res) {
     Xconn.countDocuments(query, function(err, docs){
       if (docs === 0) {
         res.render("fail.ejs", {
-          fail: "No data for your search. Make sure to provide an value that match the filter specified",
+          fail: "No data for your search",
           route: "/searchcircuit"
         });
       } else {
@@ -612,6 +612,67 @@ app.post("/delete", function(req, res) {
 
 
 
+app.post("/deletepp", function(req, res){
+  const patchPanel = _.toLower(req.body.inputDelete);
+  const az = _.toLower(req.body.az);
+  // console.log(patchPanel);
+
+  PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, docs){
+    if (!err) {
+      if (docs === 1) {
+        Xconn.countDocuments({patchpanel: patchPanel, az: az}, function(err, numOfConnections){
+          if (numOfConnections === 0) {
+            PatchPanel.find({_patchpanel: patchPanel, az: az}, function(err, pp){
+              res.render("deletepatchpanel.ejs", {
+                patchpanel: pp,
+                az: _.toUpper(az)
+              });
+            });
+          } else {
+            res.render("fail.ejs", {
+              fail: "Patch-Panel " + _.toUpper(patchPanel) + " in " + _.toUpper(az) + " is not empty, hence it cannot be decommissioned",
+              route: "/delete"
+            });
+          }
+        });
+      } else if (docs > 1) {
+        res.render("fail.ejs", {
+          fail: "Patch-Panel " + _.toUpper(patchPanel) + " in " + _.toUpper(az) + " is duplicated",
+          route: "/delete"
+        });
+      } else {
+        res.render("fail.ejs", {
+          fail: "There's no Patch-Panel " + _.toUpper(patchPanel) + " in " + _.toUpper(az),
+          route: "/delete"
+        });
+      }
+    } else {
+      res.send(err);
+    }
+  });
+});
+
+
+
+
+app.post("/confirmdeletepp", function(req, res){
+  const az = _.toLower(req.body.az);
+  const patchpanel = _.toLower(req.body.patchpanel);
+
+  console.log(az, patchpanel);
+
+  PatchPanel.findOneAndDelete({_patchpanel: patchpanel, az: az}, function(err, doc){
+    res.render("success.ejs", {
+      success: "Patch-Panel " + _.toUpper(patchpanel) + " in " + _.toUpper(az) + " deleted",
+      route: "/delete"
+    })
+  });
+
+});
+
+
+
+
 // Decommission circuit.
 app.post("/deletecircuit", function(req, res) {
   const deleteSerialId = _.toLower(req.body.serialId);
@@ -793,7 +854,19 @@ app.get("/addaz", function(req, res) {
 
 // Method to decommission circuit.
 app.get("/delete", function(req, res) {
+  res.render("del.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+  });
+});
+
+app.get("/deletexconn", function(req, res) {
   res.render("delete.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+  });
+});
+
+app.get("/deletepp", function(req, res){
+  res.render("deletepp.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
 });
