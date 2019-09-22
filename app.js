@@ -147,7 +147,6 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPa
 
             } else if (actionAddUpdate === "updatecircuit") {
               if (foundPatchPanel === 1) {
-                console.log("New: " + patchPanel + " / Old: " + oldPatchPanel);
                 if (oldPatchPanel === patchPanel) {
                   Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
                     _circuit: serialId,
@@ -725,7 +724,6 @@ app.post("/deletecircuit", function(req, res) {
   }
 
   Xconn.findOneAndDelete({_circuit: deleteSerialId, az: az}, function(err, doc) {
-    console.log("DELETED: " + doc);
 
     PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: 1}}, function(err, doc) {
       res.render("success.ejs", {
