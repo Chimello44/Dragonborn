@@ -654,7 +654,6 @@ app.post("/delete", function(req, res) {
 app.post("/deletepp", function(req, res){
   const patchPanel = _.toLower(req.body.inputDelete);
   const az = _.toLower(req.body.az);
-  // console.log(patchPanel);
 
   PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, docs){
     if (!err) {
@@ -697,8 +696,6 @@ app.post("/deletepp", function(req, res){
 app.post("/confirmdeletepp", function(req, res){
   const az = _.toLower(req.body.az);
   const patchpanel = _.toLower(req.body.patchpanel);
-
-  console.log(az, patchpanel);
 
   PatchPanel.findOneAndDelete({_patchpanel: patchpanel, az: az}, function(err, doc){
     res.render("success.ejs", {
