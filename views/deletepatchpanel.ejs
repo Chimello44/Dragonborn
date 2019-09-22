@@ -19,7 +19,7 @@
               <p class="text-secondary card-text">Rack: <%= panel.rack %></p>
               <p class="text-secondary card-text">Connection type: <%= panel.type %></p>
               <p class="bar card-text rackCapacity" name="capacity">Current capacity: <%= panel.capacity %></p>
-              <form class="" action="/confirmdeletepp" method="post">
+              <form class="" action="/confirmdeletepp" method="post" onsubmit="return confirm('Please, confirm the data before hitting OK');>
                 <div class="row">
                   <input type="hidden" name="az" value="<%=panel.az%>">
                   <input type="hidden" name="patchpanel" value="<%=panel._patchpanel%>">

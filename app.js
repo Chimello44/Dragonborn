@@ -114,9 +114,9 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPa
     if (foundAz === 1) {
       PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel) {
         if (foundPatchPanel === 1) {
-          PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, doc) {
+          PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, pp) {
 
-            if ((doc.capacity > 0) && (actionAddUpdate === "addcircuit")) {
+            if ((pp.capacity > 0) && (actionAddUpdate === "addcircuit")) {
               Xconn.countDocuments({_circuit: serialId, az: az}, function(err, doc) {
                 if (doc === 0) {
                   const newCircuit = new Xconn({
@@ -136,7 +136,7 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPa
                     success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az),
                     route: "/addcircuit"
                   });
-                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, doc) {});
+                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, ppupdate) {});
                 } else {
                   res.render("fail.ejs", {
                     fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az),
@@ -145,46 +145,70 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPa
                 }
               });
 
-            } else if ((doc.capacity > 0) && (actionAddUpdate === "updatecircuit")) {
+            } else if (actionAddUpdate === "updatecircuit") {
               if (foundPatchPanel === 1) {
-
-                PatchPanel.findOneAndUpdate({az: az, _patchpanel: oldPatchPanel}, {$inc: {capacity: 1}}, function(err, doc) {});
-
-                Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
-                  _circuit: serialId,
-                  serviceprovider: serviceProvider,
-                  bandwidth: bandwidth,
-                  patchpanel: patchPanel,
-                  patchpanelport: patchPanelPort,
-                  device: device,
-                  interface: interface,
-                  az: az,
-                  cluster: device.slice(0, 3)
-                }, function(err, doc) {
-
-
-                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, doc) {});
-
-
-
-                  res.render("success.ejs", {
-                    success: "Circuit ID " + _.toUpper(serialId) + " updated",
-                    route: "/update"
+                console.log("New: " + patchPanel + " / Old: " + oldPatchPanel);
+                if (oldPatchPanel === patchPanel) {
+                  Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
+                    _circuit: serialId,
+                    serviceprovider: serviceProvider,
+                    bandwidth: bandwidth,
+                    patchpanel: patchPanel,
+                    patchpanelport: patchPanelPort,
+                    device: device,
+                    interface: interface,
+                    az: az,
+                    cluster: device.slice(0, 3)
+                  }, function(err, ppupdate) {
+                    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, function(err, doc) {});
+                    res.render("success.ejs", {
+                      success: "Circuit ID " + _.toUpper(serialId) + " updated",
+                      route: "/update"
+                    });
                   });
-                });
+                } else {
+                  if (pp.capacity > 0) {
+                    PatchPanel.findOneAndUpdate({az: az, _patchpanel: oldPatchPanel}, {$inc: {capacity: 1}}, function(err, doc) {});
+
+                    Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
+                      _circuit: serialId,
+                      serviceprovider: serviceProvider,
+                      bandwidth: bandwidth,
+                      patchpanel: patchPanel,
+                      patchpanelport: patchPanelPort,
+                      device: device,
+                      interface: interface,
+                      az: az,
+                      cluster: device.slice(0, 3)
+                    }, function(err, doc) {
+                      PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, doc) {});
+                      res.render("success.ejs", {
+                        success: "Circuit ID " + _.toUpper(serialId) + " updated",
+                        route: "/update"
+                      });
+                    });
+                  } else {
+                    res.render("fail.ejs", {
+                      fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
+                      route: "/update"
+                    });
+                  }
+
+                }
+
               } else {
                 res.render("fail.ejs", {
                   success: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
                   route: "/update"
                 });
               }
-
             } else {
               res.render("fail.ejs", {
                 fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
-                route: "/add"
+                route: "/update"
               });
             }
+
           });
         } else {
           res.render("fail.ejs", {
@@ -230,34 +254,50 @@ app.post("/result", function(req, res) {
   fs.truncate(__dirname + '/report.csv', 0, function(){});
 
   const typeOfData = _.toLower(req.body.queryClusterAZ);
-  const valueOfData = _.toLower(req.body.inputForm).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const valueOfData = _.toLower(req.body.inputForm);
   const queryOption = _.toLower(req.body.queryOption);
-  const queryParameter = _.toLower(req.body.queryParameter);
+  const queryParameter = _.toLower(req.body.queryParameter).normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const ticket = _.toLower(req.body.ticket);
 
   const query = {};
   const searchTitle = _.toUpper(valueOfData);
   query[typeOfData] = valueOfData;
   if (queryOption == "allrecords") {
-    Xconn.countDocuments(query, function(err, docs){
-      if (docs === 0) {
+
+    Az.countDocuments({_id: valueOfData}, function(err, azNum){
+      if (azNum === 1) {
+        Xconn.countDocuments(query, function(err, docs){
+          if (docs === 0) {
+            res.render("fail.ejs", {
+              fail: "AZ " + _.toUpper(valueOfData) + " doesn't have Cross-Connects registered",
+              route: "/search"
+            });
+          } else {
+            Xconn.find(query, function(err, connection) {
+              downloadSearch = connection;
+              csvWriter.writeRecords(downloadSearch);
+              res.render("result.ejs", {
+                connection: connection,
+                valueOfData: searchTitle,
+                queryClusterAZ: typeOfData,
+                skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+              });
+            });
+          }
+        });
+      } else if (azNum > 1) {
         res.render("fail.ejs", {
-          fail: "No data for your search. Perhaps your AZ does not have any circuit registered",
+          fail: "AZ " + _.toUpper(valueOfData) + " is duplicated",
           route: "/search"
         });
       } else {
-        Xconn.find(query, function(err, connection) {
-          downloadSearch = connection;
-          csvWriter.writeRecords(downloadSearch);
-          res.render("result.ejs", {
-            connection: connection,
-            valueOfData: searchTitle,
-            queryClusterAZ: typeOfData,
-            skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-          });
+        res.render("fail.ejs", {
+          fail: "AZ " + _.toUpper(valueOfData) + " is not registered",
+          route: "/search"
         });
       }
     });
+
 
     // If queryOption is not allrecords, it means that the user has selected a specific option for their search.
   } else {
@@ -312,7 +352,7 @@ app.post("/resultpptracker", function(req, res){
             patchpanel: docs,
             az: _.toUpper(az)
           });
-        });
+        }).sort({_patchpanel: 1});
       } else if (pp !== "" && type !== "") {
         // If a filter is specified, the search looks for the specific panel in that AZ.
         query["_patchpanel"] = pp;
@@ -422,7 +462,7 @@ app.post("/addpp", function(req, res) {
   Az.countDocuments({_id: az}, function(err, foundAz) {
     if (foundAz === 0) {
       res.render("fail.ejs", {
-        fail: "There's no AZ for panel " + _.toUpper(patchPanel),
+        fail: "No AZ registered with ID " + _.toUpper(az),
         route: "/add"
       });
     } else if (foundAz === 1) {
@@ -663,7 +703,7 @@ app.post("/confirmdeletepp", function(req, res){
 
   PatchPanel.findOneAndDelete({_patchpanel: patchpanel, az: az}, function(err, doc){
     res.render("success.ejs", {
-      success: "Patch-Panel " + _.toUpper(patchpanel) + " in " + _.toUpper(az) + " deleted",
+      success: "Patch-Panel " + _.toUpper(patchpanel) + " in " + _.toUpper(az) + " has been decommissioned",
       route: "/delete"
     })
   });
@@ -684,21 +724,16 @@ app.post("/deletecircuit", function(req, res) {
     var az = _.toLower(device.slice(0, 4));
   }
 
-  Xconn.findOneAndDelete({
-    _circuit: deleteSerialId
-  }, function(err, doc) {
-    PatchPanel.findOneAndUpdate({
-      az: az,
-      _patchpanel: patchPanel
-    }, {
-      $inc: {
-        capacity: 1
-      }
-    }, function(err, doc) {});
-    res.render("success.ejs", {
-      success: "Circuit ID " + doc._circuit + " has been decommissioned",
-      route: "/delete"
+  Xconn.findOneAndDelete({_circuit: deleteSerialId, az: az}, function(err, doc) {
+    console.log("DELETED: " + doc);
+
+    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: 1}}, function(err, doc) {
+      res.render("success.ejs", {
+        success: "Cross-Connect ID " + _.toUpper(deleteSerialId) + " has been decommissioned in " + _.toUpper(az),
+        route: "/delete"
+      });
     });
+
   });
 });
 

@@ -61,5 +61,14 @@ $(document).ready(function(){
     }
   });
 
+  $("input[name=rack]").attr({
+    pattern: "[A-Za-z]{3}[0-9]{1,2}.[0-9]{1,2}-[0-9]{1,2}.+[0-9]",
+    title: "Rack Position"
+  });
+
+  $("input[name=device]").attr({
+    pattern: "[A-Za-z]{3}[0-9]{1,2}-.+",
+    title: "Hostname"
+  });
 
 });
