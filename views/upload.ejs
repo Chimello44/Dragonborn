@@ -1,0 +1,23 @@
+<%- include("header"); -%>
+
+<div class="body">
+  <div class="body-content">
+
+    <h2 class="title">Upload the CSV file containing the Cross-Connects</h2>
+
+    <p class="text-secondary"><%= skyrimPhrases %></p>
+
+    <div class="upload">
+      <form action="/upload" method="post" enctype="multipart/form-data">
+        <input type="file" name="uploadFile">
+        <input type="submit" value="Upload">
+
+      </form>
+    </div>
+
+
+
+
+  </div>
+
+  <%- include("footer"); -%>
