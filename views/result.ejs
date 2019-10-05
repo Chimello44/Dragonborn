@@ -32,14 +32,12 @@
 
       <% connection.forEach(function(ckt){ %>
 
-      <% patchpanel.forEach(function(panel){ %>
-
 
       <tr class="hoverTable">
         <th><%= ckt._circuit %> </th>
         <td><%= ckt.serviceprovider %></td>
         <td><%= ckt.bandwidth %></td>
-        <td><%= panel.rack %></td>
+        <td><%= ckt.rack %></td>
         <td><%= ckt.patchpanel %></td>
         <td><%= ckt.patchpanelport %></td>
         <td><%= ckt.device %></td>
@@ -51,7 +49,6 @@
 
       <% }); %>
 
-      <% }); %>
 
     </tbody>
   </table>

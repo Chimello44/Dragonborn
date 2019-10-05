@@ -61,6 +61,7 @@ const circuitSchema = new mongoose.Schema({
   bandwidth: Number,
   device: String,
   interface: String,
+  rack: String,
   patchpanel: String,
   patchpanelport: String,
   az: String,
@@ -116,7 +117,7 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPa
       PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel) {
         if (foundPatchPanel === 1) {
           PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, pp) {
-
+            const rack = pp.rack;
             if ((pp.capacity > 0) && (actionAddUpdate === "addcircuit")) {
               Xconn.countDocuments({_circuit: serialId, az: az}, function(err, doc) {
                 if (doc === 0) {
@@ -124,6 +125,7 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPa
                     _circuit: serialId,
                     serviceprovider: serviceProvider,
                     bandwidth: bandwidth,
+                    rack: rack,
                     patchpanel: patchPanel,
                     patchpanelport: patchPanelPort,
                     device: device,
@@ -168,12 +170,14 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPa
                   });
                 } else {
                   if (pp.capacity > 0) {
+                    const rack = pp.rack;
                     PatchPanel.findOneAndUpdate({az: az, _patchpanel: oldPatchPanel}, {$inc: {capacity: 1}}, function(err, doc) {});
 
                     Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
                       _circuit: serialId,
                       serviceprovider: serviceProvider,
                       bandwidth: bandwidth,
+                      rack: rack,
                       patchpanel: patchPanel,
                       patchpanelport: patchPanelPort,
                       device: device,
@@ -246,6 +250,7 @@ app.post("/result", function(req, res) {
       {id: 'device', title: 'Device'},
       {id: 'interface', title: 'Interface'},
       {id: 'patchpanel', title: 'Patch-Panel'},
+      {id: 'rack', title: 'Rack'},
       {id: 'patchpanelport', title: 'Patch-Panel Port'},
       {id: 'ticket', title: "Ticket Number"}
     ]
@@ -275,21 +280,32 @@ app.post("/result", function(req, res) {
             });
           } else {
             Xconn.find(query, function(err, connection) {
-              const patchpanel = [];
-              connection.forEach((circuit) => {
-                PatchPanel.findOne({az: valueOfData, _patchpanel: circuit.patchpanel}, function(err, foundPP){
-                  patchpanel.push(foundPP);
-                  downloadSearch = connection;
-                  csvWriter.writeRecords(downloadSearch);
-                  res.render("result.ejs", {
-                    connection: connection,
-                    patchpanel: patchpanel,
-                    valueOfData: searchTitle,
-                    queryClusterAZ: typeOfData,
-                    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-                  });
-                });
+              // const patchpanel = [];
+              // patchpanel.push(foundPP);
+              downloadSearch = connection;
+              csvWriter.writeRecords(downloadSearch);
+              // console.log(downloadSearch);
+              res.render("result.ejs", {
+                connection: connection,
+                valueOfData: searchTitle,
+                queryClusterAZ: typeOfData,
+                skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
               });
+              // connection.forEach((circuit) => {
+              //   PatchPanel.findOne({az: valueOfData, _patchpanel: circuit.patchpanel}, function(err, foundPP){
+              //     patchpanel.push(foundPP);
+              //     downloadSearch = connection;
+              //     csvWriter.writeRecords(downloadSearch);
+              //     // console.log(downloadSearch);
+              //     res.render("result.ejs", {
+              //       connection: connection,
+              //       patchpanel: patchpanel,
+              //       valueOfData: searchTitle,
+              //       queryClusterAZ: typeOfData,
+              //       skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+              //     });
+              //   });
+              // });
             });
           }
         });
@@ -342,6 +358,21 @@ app.post("/resultpptracker", function(req, res){
   const pp = _.toLower(req.body.pp);
   const type = req.body.connectionType;
 
+  const csvWriter = createCsvWriter({
+    path: 'report.csv',
+    header: [
+      {id: 'cluster', title: 'Cluster'},
+      {id: 'az', title: 'AZ'},
+      {id: '_patchpanel', title: 'Patch-Panel ID'},
+      {id: 'capacity', title: 'Current Capacity'},
+      {id: 'fullcapacity', title: 'Full Capacity'},
+      {id: 'rack', title: 'Rack'},
+      {id: 'type', title: 'Connection Type'}
+    ]
+  });
+
+  fs.truncate(__dirname + '/report.csv', 0, function(){});
+
   const query = {};
   query["az"] = az;
 
@@ -356,6 +387,8 @@ app.post("/resultpptracker", function(req, res){
       // If there's no filter, the search looks for all panels inside the AZ.
       if (pp === "" && type === "") {
         PatchPanel.find(query, function(err, docs){
+          downloadSearch = docs;
+          csvWriter.writeRecords(downloadSearch);
           res.render("resultpptracker.ejs", {
             patchpanel: docs,
             az: _.toUpper(az)
@@ -373,6 +406,8 @@ app.post("/resultpptracker", function(req, res){
             });
           } else {
             PatchPanel.find(query, function(err, docs){
+              downloadSearch = docs;
+              csvWriter.writeRecords(downloadSearch);
               res.render("resultpptracker.ejs", {
                 patchpanel: docs,
                 az: az
@@ -390,6 +425,8 @@ app.post("/resultpptracker", function(req, res){
             });
           } else {
             PatchPanel.find(query, function(err, docs){
+              downloadSearch = docs;
+              csvWriter.writeRecords(downloadSearch);
               res.render("resultpptracker.ejs", {
                 patchpanel: docs,
                 az: az
@@ -407,6 +444,8 @@ app.post("/resultpptracker", function(req, res){
             });
           } else {
             PatchPanel.find(query, function(err, docs){
+              downloadSearch = docs;
+              csvWriter.writeRecords(downloadSearch);
               res.render("resultpptracker.ejs", {
                 patchpanel: docs,
                 az: az
@@ -763,6 +802,7 @@ app.post("/generatereport", function(req, res) {
       {id: 'device', title: 'Device'},
       {id: 'interface', title: 'Interface'},
       {id: 'patchpanel', title: 'Patch-Panel'},
+      {id: 'rack', title: 'Rack'},
       {id: 'patchpanelport', title: 'Patch-Panel Port'},
       {id: 'ticket', title: "Ticket Number"}
     ]

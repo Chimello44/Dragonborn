@@ -1,2 +1,4 @@
-Cluster,AZ,Cross-Connect ID,Service Provider / Peer,Bandwidth (Gbps),Device,Interface,Patch-Panel,Patch-Panel Port,Ticket Number
-gru,gru1,1,akamai,10,gru1-br-cor-r2,xe-1/0/0,pp2,1,
+Cluster,AZ,Patch-Panel ID,Current Capacity,Full Capacity,Rack,Connection Type
+gru,gru3,pp1,4,6,gru3.1-1.1000,lc
+gru,gru3,pp2,9,11,gru3.1-1.1000,lc
+gru,gru3,pp3,15,15,gru3.1-1.1000,sc
