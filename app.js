@@ -74,6 +74,7 @@ const patchPanelSchema = new mongoose.Schema({
     required: true,
   },
   capacity: Number,
+  fullcapacity: Number,
   rack: String,
   az: String,
   cluster: String,
@@ -455,6 +456,7 @@ app.post("/addcircuit", function(req, res) {
 app.post("/addpp", function(req, res) {
   const patchPanel = _.toLower(req.body.patchPanelId);
   const capacity = req.body.capacity;
+  const fullcapacity = req.body.capacity;
   const rack = _.toLower(req.body.rack);
   const type = req.body.connectionType;
 
@@ -478,6 +480,7 @@ app.post("/addpp", function(req, res) {
           const newPatchPanel = new PatchPanel({
             _patchpanel: patchPanel,
             capacity: capacity,
+            fullcapacity: fullcapacity,
             rack: rack,
             az: az,
             cluster: cluster,
