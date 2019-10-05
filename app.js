@@ -276,10 +276,8 @@ app.post("/result", function(req, res) {
             Xconn.find(query, function(err, connection) {
               const patchpanel = [];
               connection.forEach((circuit) => {
-                console.log(circuit.patchpanel, valueOfData);
                 PatchPanel.findOne({az: valueOfData, _patchpanel: circuit.patchpanel}, function(err, foundPP){
                   patchpanel.push(foundPP);
-                  console.log(patchpanel);
                   downloadSearch = connection;
                   csvWriter.writeRecords(downloadSearch);
                   res.render("result.ejs", {
@@ -291,14 +289,6 @@ app.post("/result", function(req, res) {
                   });
                 });
               });
-              // downloadSearch = connection;
-              // csvWriter.writeRecords(downloadSearch);
-              // res.render("result.ejs", {
-              //   connection: connection,
-              //   valueOfData: searchTitle,
-              //   queryClusterAZ: typeOfData,
-              //   skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
-              // });
             });
           }
         });
