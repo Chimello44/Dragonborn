@@ -261,6 +261,7 @@ app.post("/result", function(req, res) {
   const query = {};
   const searchTitle = _.toUpper(valueOfData);
   query[typeOfData] = valueOfData;
+
   if (queryOption == "allrecords") {
 
     Az.countDocuments({_id: valueOfData}, function(err, azNum){
@@ -273,14 +274,31 @@ app.post("/result", function(req, res) {
             });
           } else {
             Xconn.find(query, function(err, connection) {
-              downloadSearch = connection;
-              csvWriter.writeRecords(downloadSearch);
-              res.render("result.ejs", {
-                connection: connection,
-                valueOfData: searchTitle,
-                queryClusterAZ: typeOfData,
-                skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+              const patchpanel = [];
+              connection.forEach((circuit) => {
+                console.log(circuit.patchpanel, valueOfData);
+                PatchPanel.findOne({az: valueOfData, _patchpanel: circuit.patchpanel}, function(err, foundPP){
+                  patchpanel.push(foundPP);
+                  console.log(patchpanel);
+                  downloadSearch = connection;
+                  csvWriter.writeRecords(downloadSearch);
+                  res.render("result.ejs", {
+                    connection: connection,
+                    patchpanel: patchpanel,
+                    valueOfData: searchTitle,
+                    queryClusterAZ: typeOfData,
+                    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+                  });
+                });
               });
+              // downloadSearch = connection;
+              // csvWriter.writeRecords(downloadSearch);
+              // res.render("result.ejs", {
+              //   connection: connection,
+              //   valueOfData: searchTitle,
+              //   queryClusterAZ: typeOfData,
+              //   skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+              // });
             });
           }
         });

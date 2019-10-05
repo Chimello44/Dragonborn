@@ -1,0 +1,3 @@
+Cluster,AZ,Cross-Connect ID,Service Provider / Peer,Bandwidth (Gbps),Device,Interface,Patch-Panel,Patch-Panel Port,Ticket Number
+gru,gru1,1,akamai,10,gru1-br-cor-r2,xe-1/0/0,pp2,1,
+gru,gru3,1,telefonica,10,gru3-br-cor-r1,xe-1+1+1,pp1,1,

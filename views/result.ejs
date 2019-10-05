@@ -6,16 +6,17 @@
   </div>
   <div class="download-csv-button">
     <!-- <form action="/downloadSearch" method="get"> -->
-      <a href="/downloadSearch"><button type="button" class="btn btn-outline-primary">Download CSV</button></a>
+    <a href="/downloadSearch"><button type="button" class="btn btn-outline-primary">Download CSV</button></a>
     <!-- </form> -->
   </div>
 
   <table class="table">
     <thead class="table-dark">
       <tr>
-        <th scope="col">ID</th>
+        <th scope="col">Cross-Connect ID</th>
         <th scope="col">Carrier</th>
         <th scope="col">Bandwidth (Gbps)</th>
+        <th scope="col">Rack</th>
         <th scope="col">Patch-Panel</th>
         <th scope="col">Patch-Panel Port</th>
         <th scope="col">Device</th>
@@ -31,10 +32,14 @@
 
       <% connection.forEach(function(ckt){ %>
 
+      <% patchpanel.forEach(function(panel){ %>
+
+
       <tr class="hoverTable">
         <th><%= ckt._circuit %> </th>
         <td><%= ckt.serviceprovider %></td>
         <td><%= ckt.bandwidth %></td>
+        <td><%= panel.rack %></td>
         <td><%= ckt.patchpanel %></td>
         <td><%= ckt.patchpanelport %></td>
         <td><%= ckt.device %></td>
@@ -43,6 +48,8 @@
         <td><%= ckt.cluster %></td>
         <td><%= ckt.ticket %></td>
       </tr>
+
+      <% }); %>
 
       <% }); %>
 
