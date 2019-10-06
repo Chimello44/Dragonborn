@@ -7,12 +7,13 @@
 
     <p class="text-secondary"><%= skyrimPhrases %></p>
 
-    <div class="upload">
-      <form action="/upload" method="post" enctype="multipart/form-data">
-        <input type="file" name="uploadFile">
-        <input type="submit" value="Upload">
+    <h2 class="row">IMPORTANT: To keep data accuracy, it is recommended that the upload feature be used only once per AZ (only the first time). Once the records are populated, any other connection should be inserted individually - one circuit at a time.</h2>
 
-      </form>
+    <div class="upload">
+      <form action="/upload" method="POST" encType="multipart/form-data">
+        <input type="file" name="file" accept="*.csv" />
+        <input class="btn btn-primary" type="submit" value="Upload" />
+    </form>
     </div>
 
 

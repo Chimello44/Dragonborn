@@ -6,9 +6,13 @@ const _ = require("lodash");
 
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 
-const fs = require("fs");
+const fs = require('fs')
+
+const csv = require('csv-parser')
 
 const favicon = require('serve-favicon');
+
+const formidable = require("formidable")
 
 const app = express();
 
@@ -250,8 +254,8 @@ app.post("/result", function(req, res) {
       {id: 'device', title: 'Device'},
       {id: 'interface', title: 'Interface'},
       {id: 'patchpanel', title: 'Patch-Panel'},
-      {id: 'rack', title: 'Rack'},
       {id: 'patchpanelport', title: 'Patch-Panel Port'},
+      {id: 'rack', title: 'Rack'},
       {id: 'ticket', title: "Ticket Number"}
     ]
   });
@@ -802,8 +806,8 @@ app.post("/generatereport", function(req, res) {
       {id: 'device', title: 'Device'},
       {id: 'interface', title: 'Interface'},
       {id: 'patchpanel', title: 'Patch-Panel'},
-      {id: 'rack', title: 'Rack'},
       {id: 'patchpanelport', title: 'Patch-Panel Port'},
+      {id: 'rack', title: 'Rack'},
       {id: 'ticket', title: "Ticket Number"}
     ]
   });
@@ -878,6 +882,234 @@ app.post("/generatereport", function(req, res) {
       }
     });
   }
+});
+
+let i = 0;
+function firstInputDatabase(results){
+
+  results.forEach(function(data){
+    Az.countDocuments({_id: data.az}, function(err, foundAz) {
+      if (foundAz === 1) {
+        console.log("1");
+        PatchPanel.countDocuments({_patchpanel: data.patchPanel, az: data.az}, function(err, foundPatchPanel) {
+          if (foundPatchPanel === 1) {
+            console.log("2");
+            PatchPanel.findOne({_patchpanel: data.patchPanel, az: data.az}, function(err, pp) {
+              // const rack = pp.rack;
+              if (pp.capacity > 0) {
+                console.log("3");
+                Xconn.countDocuments({_circuit: data._circuit, az: data.az}, function(err, doc) {
+                  if (doc === 0) {
+                    console.log("4");
+                    const newCircuit = new Xconn({
+                      _circuit: data._circuit,
+                      serviceprovider: data.serviceProvider,
+                      bandwidth: data.bandwidth,
+                      // rack: rack,
+                      patchpanel: data.patchPanel,
+                      patchpanelport: data.patchPanelPort,
+                      device: data.device,
+                      interface: data.interface,
+                      az: data.az,
+                      cluster: data.cluster
+                    });
+                    // newCircuit.save();
+                    i++;
+                    console.log("Circuit " + i + ": " + newCircuit);
+
+                    PatchPanel.findOneAndUpdate({az: data.az, _patchpanel: data.patchPanel}, {$inc: {capacity: -1}}, function(err, ppupdate) {});
+                  }
+                });
+              }
+            });
+          }
+        });
+      }
+    });
+  });
+}
+
+
+app.post("/upload", function(req, res){
+    const form = new formidable.IncomingForm();
+    const oldPatchPanel = "";
+    const ticket = "";
+    const actionAddUpdate = "addcircuit";
+    const results = [];
+    const azs = [];
+    let uniqueAzs = [];
+    const patchpanels = [];
+    let uniquePatchPanels = [];
+    const patchpanelsDB = [];
+
+
+
+    form.parse(req);
+
+    form.on("fileBegin", function(name, file){
+      file.path = __dirname + '/uploads/' + file.name;
+    });
+
+    form.on('file', function (name, file){
+      file[name] = "template.csv";
+      // console.log(file.name);
+
+        fs.createReadStream(__dirname + "/uploads/" + file.name)
+          .pipe(csv())
+          .on("data", (data) => {
+
+            results.push(data);
+            // console.log(results);
+
+
+            // console.log(data.az + data.patchpanel);
+
+
+
+            // fs.unlink(file.name);
+            // Az.countDocuments({_id: data.az}, function(err, foundAz) {
+            //   if (foundAz === 1) {
+            //     PatchPanel.countDocuments({_patchpanel: data.patchPanel, az: data.az}, function(err, foundPatchPanel) {
+            //       if (foundPatchPanel === 1) {
+            //         PatchPanel.findOne({_patchpanel: data.patchPanel, az: data.az}, function(err, pp) {
+            //           const rack = pp.rack;
+            //           if (pp.capacity > 0) {
+            //             Xconn.countDocuments({_circuit: data._circuit, az: data.az}, function(err, doc) {
+            //               if (doc === 0) {
+            //                 const newCircuit = new Xconn({
+            //                   _circuit: data._circuit,
+            //                   serviceprovider: data.serviceProvider,
+            //                   bandwidth: data.bandwidth,
+            //                   rack: rack,
+            //                   patchpanel: data.patchPanel,
+            //                   patchpanelport: data.patchPanelPort,
+            //                   device: data.device,
+            //                   interface: data.interface,
+            //                   az: data.az,
+            //                   cluster: data.cluster
+            //                 });
+            //                 newCircuit.save();
+            //
+            //                 PatchPanel.findOneAndUpdate({az: data.az, _patchpanel: data.patchPanel}, {$inc: {capacity: -1}}, function(err, ppupdate) {});
+            //               }
+            //             });
+            //           }
+            //         });
+            //       }
+            //     });
+            //   }
+            // });
+          })
+          .on("end", () => {
+            // console.log(results);
+            // firstInputDatabase(results);
+
+
+
+
+            results.forEach(arrayFile => {
+              azs.push(arrayFile.az);
+              patchpanels.push(arrayFile.patchpanel);
+            });
+
+
+
+
+            uniqueAzs = [...new Set(azs)];
+            uniquePatchPanels = [...new Set(patchpanels)];
+
+
+            // console.log(uniquePatchPanels);
+
+
+
+
+
+            // console.log(uniqueAzs.length + uniqueAzs[0]);
+            if (uniqueAzs.length === 1) {
+              Xconn.countDocuments({az: uniqueAzs[0]}, function(err, foundXconn){
+                if (!foundXconn) {
+                  // console.log(uniqueAzs[0]);
+                  Az.countDocuments({_id: uniqueAzs[0]}, function(err, foundAz){
+                    // console.log(foundAz);
+                    if (foundAz) {
+
+                      PatchPanel.find({az: uniqueAzs[0]}, function(err, foundPP){
+                        foundPP.forEach((pps) => {
+                          // console.log(pps._patchpanel);
+                          patchpanelsDB.push(pps._patchpanel);
+                        });
+                        // console.log(uniquePatchPanels.length + patchpanelsDB);
+
+                        if (uniquePatchPanels.length !== patchpanelsDB.length) {
+                          res.render("fail.ejs", {
+                            fail: "All Patch-Panels must be registered prior to uploading the CSV file",
+                            route: "/add"
+                          });
+                        } else if (_.toLower(uniquePatchPanels.sort()) !== _.toLower(patchpanelsDB.sort())) {
+                          res.render("fail.ejs", {
+                            fail: "All Patch-Panels must match the ones registered on the database prior to uploading the CSV file",
+                            route: "/add"
+                          });
+                        } else {
+                          Xconn.insertMany(results, function(err, docs){
+                            res.render("success.ejs", {
+                              success: "Records updated for " + _.toUpper(uniqueAzs[0]),
+                              route: "/"
+                            });
+                          });
+                        }
+                      });
+
+                    } else {
+                      res.render("fail.ejs", {
+                        fail: "No AZ record found for " + uniqueAzs[0],
+                        route: "/add"
+                      });
+                    }
+                  });
+
+
+                } else {
+                  res.render("fail.ejs", {
+                    fail: _.toUpper(uniqueAzs[0]) + " already contains Cross-Connections registered. Please add new connections individually",
+                    route: "/add"
+                  });
+                }
+              });
+            } else {
+              res.render("fail.ejs", {
+                fail: "Please upload one CSV file per AZ",
+                route: "/upload-cv"
+              });
+            }
+
+            // Xconn.countDocuments({az: az[0]}, function(err, foundXconn){
+            //   if (!foundXconn) {
+            //     Xconn.insertMany(results, function(err, docs){
+            //       console.log(docs);
+            //       res.render("success.ejs", {
+            //         success: "Cross-Connect records uploaded sucessfully",
+            //         route: "/"
+            //       });
+            //     });
+            //   } else {
+            //     res.render("fail.ejs", {
+            //       fail: _.toUpper(az[0]) + " contains Cross-Connects registered. Please either decommission all connections for your AZ or upload the new circuits one by one",
+            //       route: "/"
+            //     });
+            //   }
+            // });
+
+            fs.unlink(__dirname + "/uploads/" + file.name, (err) => {
+              if (err) {
+                console.error(err)
+                return
+              }
+            });
+
+          });
+    });
 });
 
 
@@ -962,6 +1194,12 @@ app.get("/downloadSearch", function(req, res){
   res.setHeader('Content-disposition', 'attachment; filename=report.csv');
   res.setHeader('content-type', 'text/csv');
   res.download(__dirname + '/report.csv');
+});
+
+app.get("/upload-csv", function(req, res){
+  res.render("upload.ejs", {
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+  });
 });
 
 
