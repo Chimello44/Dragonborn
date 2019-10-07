@@ -932,6 +932,7 @@ function firstInputDatabase(results){
 
 app.post("/upload", function(req, res){
     const form = new formidable.IncomingForm();
+    //https://shiya.io/simple-file-upload-with-express-js-and-formidable-in-node-js/
     const oldPatchPanel = "";
     const ticket = "";
     const actionAddUpdate = "addcircuit";
@@ -1043,16 +1044,19 @@ app.post("/upload", function(req, res){
 
                         if (uniquePatchPanels.length !== patchpanelsDB.length) {
                           res.render("fail.ejs", {
-                            fail: "All Patch-Panels must be registered prior to uploading the CSV file",
+                            fail: "Patch-Panels must be registered prior to uploading the CSV file",
                             route: "/add"
                           });
                         } else if (_.toLower(uniquePatchPanels.sort()) !== _.toLower(patchpanelsDB.sort())) {
                           res.render("fail.ejs", {
-                            fail: "All Patch-Panels must match the ones registered on the database prior to uploading the CSV file",
+                            fail: "All Patch-Panels from the CSV file must match the ones registered on the database",
                             route: "/add"
                           });
                         } else {
-                          Xconn.insertMany(results, function(err, docs){
+                          let resultsString = JSON.stringify(results);
+                          let resultsLower = _.toLower(resultsString);
+                          let resultsObj = JSON.parse(resultsLower);
+                          Xconn.insertMany(resultsObj, function(err, docs){
                             res.render("success.ejs", {
                               success: "Records updated for " + _.toUpper(uniqueAzs[0]),
                               route: "/"

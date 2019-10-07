@@ -1,9 +1,10 @@
 Cluster,AZ,Cross-Connect ID,Service Provider / Peer,Bandwidth (Gbps),Device,Interface,Patch-Panel,Patch-Panel Port,Rack,Ticket Number
 gru,gru3,1,google,100,gru3-br-cor-r3,et-0/0/11,pp1,1,,
 gru,gru3,2,telefonica,100,gru3-br-cor-r3,et-0/0/49,pp1,2,,
-gru,gru3,3,akamai,100,gru3-br-tra-r3,et-0/0/0,pp1,1,,
+gru,gru3,3,akamai,100,gru3-br-cor-r3,et-0/0/0,pp1,1,,
 gru,gru3,4,akamai,100,gru3-br-tra-r4,et-0/0/0,pp1,2,,
 gru,gru3,5,microsoft,100,gru3-br-cor-r3,et-0/0/11,pp1,1,,
 gru,gru3,6,microsoft,100,gru3-br-cor-r4,xe-0/0/11,pp1,2,,
 gru,gru3,7,embratel,10,gru3-br-cor-r1,xe-0/0/0,pp1,1,,
 gru,gru3,8,embratel,10,gru3-br-cor-r2,xe-0/0/0,pp1,2,,
+gru,gru3,25,akamai,10,gru3-br-cor-r2,xe-2/0/0,pp1,1,gru3.1-1.1000,
