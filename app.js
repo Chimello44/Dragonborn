@@ -1010,11 +1010,15 @@ app.post("/upload", function(req, res){
             let resultsString = JSON.stringify(results);
             let resultsLower = _.toLower(resultsString);
             let resultsObj = JSON.parse(resultsLower);
+            // let az;
+
+
 
 
             resultsObj.forEach(arrayFile => {
               azs.push(arrayFile.az);
               patchpanels.push(arrayFile.patchpanel);
+              // az = arrayFile.az;
             });
 
 
@@ -1023,7 +1027,7 @@ app.post("/upload", function(req, res){
             uniqueAzs = [...new Set(azs)];
             uniquePatchPanels = [...new Set(patchpanels)];
 
-            // console.log(uniquePatchPanels);
+            console.log(uniqueAzs);
 
 
             uniquePatchPanels.forEach((panel) => {
@@ -1075,23 +1079,60 @@ app.post("/upload", function(req, res){
 
                           // console.log(foundPP);
 
+                          const circuitArray = [];
 
-                          uniquePatchPanels.forEach((panel) => {
-                            let amountOfXconns = patchpanelCount[panel];
-                            // console.log(amountOfXconns);
-                            PatchPanel.updateOne({_patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
-                              console.log("Patch-panel " + panel + " updated");
-                            });
+                          resultsObj.forEach((element) => {
+                            circuitArray.push(element._circuit);
                           });
+                          let uniqueCircuitArray = [...new Set(circuitArray)];
+
+                          console.log(circuitArray);
+                          console.log(uniqueCircuitArray);
+
+                          if (uniqueCircuitArray.length === circuitArray.length) {
+                            console.log("match");
+                            uniquePatchPanels.forEach((panel) => {
+                              let amountOfXconns = patchpanelCount[panel];
+                              // console.log(amountOfXconns);
+                              PatchPanel.updateOne({az: uniqueAzs[0], _patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
+                                console.log("Patch-panel " + panel + " updated");
+                              });
+                            });
+                            Xconn.insertMany(resultsObj, function(err, docs){
+                              res.render("success.ejs", {
+                                success: "Records updated for " + _.toUpper(uniqueAzs[0]),
+                                route: "/"
+                              });
+                            });
+                          } else {
+                            console.log("do not match");
+                            res.render("fail.ejs", {
+                              fail: "There are duplicated IDs in the CSV file. Fix that prior to uploading the file",
+                              route: "/"
+                            });
+                          }
+
+                          // console.log(elementArray);
+
+
+
+
+                          // uniquePatchPanels.forEach((panel) => {
+                          //   let amountOfXconns = patchpanelCount[panel];
+                          //   // console.log(amountOfXconns);
+                          //   PatchPanel.updateOne({_patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
+                          //     console.log("Patch-panel " + panel + " updated");
+                          //   });
+                          // });
                           // console.log(foundPP);
 
 
-                          Xconn.insertMany(resultsObj, function(err, docs){
-                            res.render("success.ejs", {
-                              success: "Records updated for " + _.toUpper(uniqueAzs[0]),
-                              route: "/"
-                            });
-                          });
+                          // Xconn.insertMany(resultsObj, function(err, docs){
+                          //   res.render("success.ejs", {
+                          //     success: "Records updated for " + _.toUpper(uniqueAzs[0]),
+                          //     route: "/"
+                          //   });
+                          // });
                         }
                       });
 
