@@ -1015,7 +1015,7 @@ app.post("/upload", function(req, res){
 
 
 
-
+            // https://wsvincent.com/javascript-remove-duplicates-array/
             uniqueAzs = [...new Set(azs)];
             uniquePatchPanels = [...new Set(patchpanels)];
 
