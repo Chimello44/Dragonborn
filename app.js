@@ -942,6 +942,7 @@ app.post("/upload", function(req, res){
     const patchpanels = [];
     let uniquePatchPanels = [];
     const patchpanelsDB = [];
+    const patchpanelCount = {};
 
 
 
@@ -960,6 +961,7 @@ app.post("/upload", function(req, res){
           .on("data", (data) => {
 
             results.push(data);
+
             // console.log(results);
 
 
@@ -1005,10 +1007,12 @@ app.post("/upload", function(req, res){
             // console.log(results);
             // firstInputDatabase(results);
 
+            let resultsString = JSON.stringify(results);
+            let resultsLower = _.toLower(resultsString);
+            let resultsObj = JSON.parse(resultsLower);
 
 
-
-            results.forEach(arrayFile => {
+            resultsObj.forEach(arrayFile => {
               azs.push(arrayFile.az);
               patchpanels.push(arrayFile.patchpanel);
             });
@@ -1019,8 +1023,20 @@ app.post("/upload", function(req, res){
             uniqueAzs = [...new Set(azs)];
             uniquePatchPanels = [...new Set(patchpanels)];
 
-
             // console.log(uniquePatchPanels);
+
+
+            uniquePatchPanels.forEach((panel) => {
+              let count = 0;
+              for (var i = 0; i < patchpanels.length; i++) {
+                if (panel === patchpanels[i]) {
+                  count++;
+                }
+              }
+              patchpanelCount[panel] = count;
+              // console.log(patchpanelCount);
+            });
+
 
 
 
@@ -1053,9 +1069,23 @@ app.post("/upload", function(req, res){
                             route: "/add"
                           });
                         } else {
-                          let resultsString = JSON.stringify(results);
-                          let resultsLower = _.toLower(resultsString);
-                          let resultsObj = JSON.parse(resultsLower);
+                          // let resultsString = JSON.stringify(results);
+                          // let resultsLower = _.toLower(resultsString);
+                          // let resultsObj = JSON.parse(resultsLower);
+
+                          // console.log(foundPP);
+
+
+                          uniquePatchPanels.forEach((panel) => {
+                            let amountOfXconns = patchpanelCount[panel];
+                            // console.log(amountOfXconns);
+                            PatchPanel.updateOne({_patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
+                              console.log("Patch-panel " + panel + " updated");
+                            });
+                          });
+                          // console.log(foundPP);
+
+
                           Xconn.insertMany(resultsObj, function(err, docs){
                             res.render("success.ejs", {
                               success: "Records updated for " + _.toUpper(uniqueAzs[0]),
