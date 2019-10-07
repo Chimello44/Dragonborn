@@ -1086,16 +1086,16 @@ app.post("/upload", function(req, res){
                           });
                           let uniqueCircuitArray = [...new Set(circuitArray)];
 
-                          console.log(circuitArray);
-                          console.log(uniqueCircuitArray);
+                          // console.log(circuitArray);
+                          // console.log(uniqueCircuitArray);
 
                           if (uniqueCircuitArray.length === circuitArray.length) {
-                            console.log("match");
+                            // console.log("match");
                             uniquePatchPanels.forEach((panel) => {
                               let amountOfXconns = patchpanelCount[panel];
                               // console.log(amountOfXconns);
                               PatchPanel.updateOne({az: uniqueAzs[0], _patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
-                                console.log("Patch-panel " + panel + " updated");
+                                // console.log("Patch-panel " + panel + " updated");
                               });
                             });
                             Xconn.insertMany(resultsObj, function(err, docs){
@@ -1105,7 +1105,7 @@ app.post("/upload", function(req, res){
                               });
                             });
                           } else {
-                            console.log("do not match");
+                            // console.log("do not match");
                             res.render("fail.ejs", {
                               fail: "There are duplicated IDs in the CSV file. Fix that prior to uploading the file",
                               route: "/"
