@@ -1010,15 +1010,21 @@ app.post("/upload", function(req, res){
             let resultsString = JSON.stringify(results);
             let resultsLower = _.toLower(resultsString);
             let resultsObj = JSON.parse(resultsLower);
-            // let az;
+            let rackPosition = {};
+            let ppRack;
 
 
 
             resultsObj.forEach(arrayFile => {
               azs.push(arrayFile.az);
               patchpanels.push(arrayFile.patchpanel);
-              // az = arrayFile.az;
+              PatchPanel.findOne({az: arrayFile.az, _patchpanel: arrayFile.patchpanel}, (err, doc) => {
+                // console.log(doc.rack);
+                rackPosition[arrayFile.patchpanel] = doc.rack;
+              });
             });
+
+
 
 
 
@@ -1026,7 +1032,6 @@ app.post("/upload", function(req, res){
             uniqueAzs = [...new Set(azs)];
             uniquePatchPanels = [...new Set(patchpanels)];
 
-            console.log(uniqueAzs);
 
 
             uniquePatchPanels.forEach((panel) => {
@@ -1060,7 +1065,6 @@ app.post("/upload", function(req, res){
                           patchpanelsDB.push(pps._patchpanel);
                           patchpanelsRack[pps._patchpanel] = pps.rack;
                         });
-                        console.log(patchpanelsRack);
 
                         if (uniquePatchPanels.length !== patchpanelsDB.length) {
                           res.render("fail.ejs", {
@@ -1085,7 +1089,6 @@ app.post("/upload", function(req, res){
                             circuitArray.push(element._circuit);
                           });
                           let uniqueCircuitArray = [...new Set(circuitArray)];
-                          console.log(uniqueCircuitArray);
 
                           // console.log(circuitArray);
                           // console.log(uniqueCircuitArray);
@@ -1109,6 +1112,33 @@ app.post("/upload", function(req, res){
                               //   });
                               // });
 
+                              uniquePatchPanels.forEach((panel) => {
+                                let amountOfXconns = patchpanelCount[panel];
+                                ppRack = rackPosition[panel];
+                                console.log(ppRack);
+
+                                Xconn.updateMany({az: uniqueAzs[0], patchpanel: panel}, {rack: ppRack}, (err, docs) => {
+                                  console.log("rack: " + docs.rack);
+                                  console.log(docs.n, docs.nModified);
+                                });
+
+                                // console.log(amountOfXconns);
+                                PatchPanel.updateOne({az: uniqueAzs[0], _patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
+                                  // console.log("Patch-panel " + panel + " updated");
+                                  // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, {rack: });
+                                  // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, )
+
+                                });
+
+                                // Xconn.updateMany({az: uniqueAzs[0], patchpanel: panel}, {rack: ppRack}, (err, docs) => {
+                                //   console.log("rack: " + docs.rack);
+                                //   console.log(docs.n, docs.nModified);
+                                // });
+                                // console.log(rackPosition[panel]);
+
+
+                              });
+
 
 
 
@@ -1119,28 +1149,10 @@ app.post("/upload", function(req, res){
                               });
                             });
 
-                            console.log(uniquePatchPanels);
-                            uniquePatchPanels.forEach((panel) => {
-                              let amountOfXconns = patchpanelCount[panel];
-
-
-                              // console.log(amountOfXconns);
-                              PatchPanel.updateOne({az: uniqueAzs[0], _patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
-                                // console.log("Patch-panel " + panel + " updated");
-                                // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, {rack: });
-                                // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, )
-                              });
-
-                              // Xconn.updateMany({az: uniqueAzs[0], patchpanel: panel}, {rack: }, (err, docs) => {
-                              //   console.log("rack: " + patchpanelsRack.rack);
-                              //   console.log(docs.n, docs.nModified);
-                              // });
 
 
 
 
-
-                            });
 
                           } else {
                             // console.log("do not match");
