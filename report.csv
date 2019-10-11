@@ -1,6 +1,6 @@
 Cluster,AZ,Patch-Panel ID,Current Capacity,Full Capacity,Rack,Connection Type
 gru,gru1,pp1,-167,20,gru1.1-1.1000,lc
-gru,gru1,pp10,11,11,gru1.1-1.1000,lc
+gru,gru1,pp10,10,11,gru1.1-1.1000,lc
 gru,gru1,pp2,-168,20,gru1.1-1.1000,lc
 gru,gru1,pp3,-256,20,gru1.1-1.2000,sc
 gru,gru1,pp5,-348,20,gru1.1-1.2000,sc
