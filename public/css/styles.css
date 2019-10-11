@@ -157,3 +157,8 @@ td {
 .center {
   margin: 0 auto;
 }
+
+.download-template{
+  margin: 0 auto;
+  margin-top: 4%
+}

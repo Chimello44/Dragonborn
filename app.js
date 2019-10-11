@@ -1321,6 +1321,13 @@ app.get("/downloadSearch", function(req, res){
   res.download(__dirname + '/report.csv');
 });
 
+app.get("/downloadTemplate", function(req, res){
+  console.log("Download template");
+  res.setHeader('Content-disposition', 'attachment; filename=cross-connect-template.csv');
+  res.setHeader('content-type', 'text/csv');
+  res.download(__dirname + '/downloads/cross-connect-template.csv');
+});
+
 app.get("/upload-csv", function(req, res){
   res.render("upload.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
