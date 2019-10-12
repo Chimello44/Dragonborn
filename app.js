@@ -115,132 +115,159 @@ const Cluster = mongoose.model("Cluster", clusterSchema);
 
 
 
-function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, oldAz, ticket, actionAddUpdate, res) {
-  Az.countDocuments({_id: az}, function(err, foundAz) {
+function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res) {
+  Az.countDocuments({
+    _id: az
+  }, function(err, foundAz) {
     if (foundAz === 1) {
-      if (az !== oldAz) {
-        res.render("fail.ejs", {
-          fail: "Must be the same AZ",
-          route: "/update"
-        });
-      } else {
-        PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel) {
-          if (foundPatchPanel === 1) {
-            PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, pp) {
-              const rack = pp.rack;
-              if ((pp.capacity > 0) && (actionAddUpdate === "addcircuit")) {
-                Xconn.countDocuments({_circuit: serialId, az: az}, function(err, doc) {
-                  if (doc === 0) {
-                    const newCircuit = new Xconn({
-                      _circuit: serialId,
-                      serviceprovider: serviceProvider,
-                      bandwidth: bandwidth,
-                      rack: rack,
-                      patchpanel: patchPanel,
-                      patchpanelport: patchPanelPort,
-                      device: device,
-                      interface: interface,
-                      az: az,
-                      cluster: device.slice(0, 3),
-                      ticket: ticket
-                    });
-                    newCircuit.save();
-                    res.render("success.ejs", {
-                      success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az),
-                      route: "/addcircuit"
-                    });
-                    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, ppupdate) {});
-                  } else {
-                    res.render("fail.ejs", {
-                      fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az),
-                      route: "/addcircuit"
-                    });
-                  }
-                });
 
-              } else if (actionAddUpdate === "updatecircuit") {
-                console.log(oldAz);
-                if (oldAz === az) {
-                  if (oldPatchPanel === patchPanel) {
-                    Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
-                      _circuit: serialId,
-                      serviceprovider: serviceProvider,
-                      bandwidth: bandwidth,
-                      patchpanel: patchPanel,
-                      patchpanelport: patchPanelPort,
-                      device: device,
-                      interface: interface,
-                      az: az,
-                      cluster: device.slice(0, 3)
-                    }, function(err, ppupdate) {
-                      PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, function(err, doc) {});
-                      res.render("success.ejs", {
-                        success: "Circuit ID " + _.toUpper(serialId) + " updated",
-                        route: "/update"
-                      });
-                    });
-                  } else {
-                    if (pp.capacity > 0) {
-                      const rack = pp.rack;
-                      PatchPanel.findOneAndUpdate({az: az, _patchpanel: oldPatchPanel}, {$inc: {capacity: 1}}, function(err, doc) {});
-
-                      Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
-                        _circuit: serialId,
-                        serviceprovider: serviceProvider,
-                        bandwidth: bandwidth,
-                        rack: rack,
-                        patchpanel: patchPanel,
-                        patchpanelport: patchPanelPort,
-                        device: device,
-                        interface: interface,
-                        az: az,
-                        cluster: device.slice(0, 3)
-                      }, function(err, doc) {
-                        PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, doc) {});
-                        res.render("success.ejs", {
-                          success: "Circuit ID " + _.toUpper(serialId) + " updated",
-                          route: "/update"
-                        });
-                      });
-                    } else {
-                      res.render("fail.ejs", {
-                        fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
-                        route: "/update"
-                      });
+      PatchPanel.countDocuments({
+        _patchpanel: patchPanel,
+        az: az
+      }, function(err, foundPatchPanel) {
+        if (foundPatchPanel === 1) {
+          PatchPanel.findOne({
+            _patchpanel: patchPanel,
+            az: az
+          }, function(err, pp) {
+            const rack = pp.rack;
+            if ((pp.capacity > 0) && (actionAddUpdate === "addcircuit")) {
+              Xconn.countDocuments({
+                _circuit: serialId,
+                az: az
+              }, function(err, doc) {
+                if (doc === 0) {
+                  const newCircuit = new Xconn({
+                    _circuit: serialId,
+                    serviceprovider: serviceProvider,
+                    bandwidth: bandwidth,
+                    rack: rack,
+                    patchpanel: patchPanel,
+                    patchpanelport: patchPanelPort,
+                    device: device,
+                    interface: interface,
+                    az: az,
+                    cluster: device.slice(0, 3),
+                    ticket: ticket
+                  });
+                  newCircuit.save();
+                  res.render("success.ejs", {
+                    success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az),
+                    route: "/addcircuit"
+                  });
+                  PatchPanel.findOneAndUpdate({
+                    az: az,
+                    _patchpanel: patchPanel
+                  }, {
+                    $inc: {
+                      capacity: -1
                     }
-
-                  }
+                  }, function(err, ppupdate) {});
                 } else {
                   res.render("fail.ejs", {
-                    fail: "To update a cross-connect, the AZ must be the same",
-                    route: "/update"
+                    fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az),
+                    route: "/addcircuit"
                   });
                 }
-                if (foundPatchPanel === 1) {
+              });
 
-
-                } else {
-                  res.render("fail.ejs", {
-                    success: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+            } else if (actionAddUpdate === "updatecircuit") {
+              if (oldPatchPanel === patchPanel) {
+                Xconn.findOneAndUpdate({
+                  _circuit: serialId,
+                  az: az
+                }, {
+                  _circuit: serialId,
+                  serviceprovider: serviceProvider,
+                  bandwidth: bandwidth,
+                  patchpanel: patchPanel,
+                  patchpanelport: patchPanelPort,
+                  device: device,
+                  interface: interface,
+                  az: az,
+                  cluster: device.slice(0, 3)
+                }, function(err, ppupdate) {
+                  PatchPanel.findOneAndUpdate({
+                    az: az,
+                    _patchpanel: patchPanel
+                  }, function(err, doc) {});
+                  res.render("success.ejs", {
+                    success: "Circuit ID " + _.toUpper(serialId) + " updated",
                     route: "/update"
                   });
-                }
-              } else {
-                res.render("fail.ejs", {
-                  fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
-                  route: "/update"
                 });
-              }
+              } else {
+                if (pp.capacity > 0) {
+                  const rack = pp.rack;
+                  PatchPanel.findOneAndUpdate({
+                    az: az,
+                    _patchpanel: oldPatchPanel
+                  }, {
+                    $inc: {
+                      capacity: 1
+                    }
+                  }, function(err, doc) {});
 
-            });
-          } else {
-            res.render("fail.ejs", {
-              fail: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
-              route: "/add"
-            });
-          }
-        });
-      }
+                  Xconn.findOneAndUpdate({
+                    _circuit: serialId,
+                    az: az
+                  }, {
+                    _circuit: serialId,
+                    serviceprovider: serviceProvider,
+                    bandwidth: bandwidth,
+                    rack: rack,
+                    patchpanel: patchPanel,
+                    patchpanelport: patchPanelPort,
+                    device: device,
+                    interface: interface,
+                    az: az,
+                    cluster: device.slice(0, 3)
+                  }, function(err, doc) {
+                    PatchPanel.findOneAndUpdate({
+                      az: az,
+                      _patchpanel: patchPanel
+                    }, {
+                      $inc: {
+                        capacity: -1
+                      }
+                    }, function(err, doc) {});
+                    res.render("success.ejs", {
+                      success: "Circuit ID " + _.toUpper(serialId) + " updated",
+                      route: "/update"
+                    });
+                  });
+                } else {
+                  res.render("fail.ejs", {
+                    fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
+                    route: "/update"
+                  });
+                }
+
+              }
+              // if (foundPatchPanel === 1) {
+              //
+              //
+              // } else {
+              //   res.render("fail.ejs", {
+              //     success: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+              //     route: "/update"
+              //   });
+              // }
+            } else {
+              res.render("fail.ejs", {
+                fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
+                route: "/update"
+              });
+            }
+
+          });
+        } else {
+          res.render("fail.ejs", {
+            fail: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+            route: "/add"
+          });
+        }
+      });
     } else {
       res.render("fail.ejs", {
         fail: _.toUpper(az) + " is not registered",
@@ -261,22 +288,54 @@ app.post("/result", function(req, res) {
 
   const csvWriter = createCsvWriter({
     path: 'report.csv',
-    header: [
-      {id: 'cluster', title: 'Cluster'},
-      {id: 'az', title: 'AZ'},
-      {id: '_circuit', title: 'Cross-Connect ID'},
-      {id: 'serviceprovider', title: 'Service Provider / Peer'},
-      {id: 'bandwidth', title: 'Bandwidth (Gbps)'},
-      {id: 'device', title: 'Device'},
-      {id: 'interface', title: 'Interface'},
-      {id: 'patchpanel', title: 'Patch-Panel'},
-      {id: 'patchpanelport', title: 'Patch-Panel Port'},
-      {id: 'rack', title: 'Rack'},
-      {id: 'ticket', title: "Ticket Number"}
+    header: [{
+        id: 'cluster',
+        title: 'Cluster'
+      },
+      {
+        id: 'az',
+        title: 'AZ'
+      },
+      {
+        id: '_circuit',
+        title: 'Cross-Connect ID'
+      },
+      {
+        id: 'serviceprovider',
+        title: 'Service Provider / Peer'
+      },
+      {
+        id: 'bandwidth',
+        title: 'Bandwidth (Gbps)'
+      },
+      {
+        id: 'device',
+        title: 'Device'
+      },
+      {
+        id: 'interface',
+        title: 'Interface'
+      },
+      {
+        id: 'patchpanel',
+        title: 'Patch-Panel'
+      },
+      {
+        id: 'patchpanelport',
+        title: 'Patch-Panel Port'
+      },
+      {
+        id: 'rack',
+        title: 'Rack'
+      },
+      {
+        id: 'ticket',
+        title: "Ticket Number"
+      }
     ]
   });
 
-  fs.truncate(__dirname + '/report.csv', 0, function(){});
+  fs.truncate(__dirname + '/report.csv', 0, function() {});
 
   const typeOfData = _.toLower(req.body.queryClusterAZ);
   const valueOfData = _.toLower(req.body.inputForm);
@@ -290,9 +349,11 @@ app.post("/result", function(req, res) {
 
   if (queryOption == "allrecords") {
 
-    Az.countDocuments({_id: valueOfData}, function(err, azNum){
+    Az.countDocuments({
+      _id: valueOfData
+    }, function(err, azNum) {
       if (azNum === 1) {
-        Xconn.countDocuments(query, function(err, docs){
+        Xconn.countDocuments(query, function(err, docs) {
           if (docs === 0) {
             res.render("fail.ejs", {
               fail: "AZ " + _.toUpper(valueOfData) + " doesn't have Cross-Connects registered",
@@ -346,7 +407,7 @@ app.post("/result", function(req, res) {
     // If queryOption is not allrecords, it means that the user has selected a specific option for their search.
   } else {
     query[queryOption] = queryParameter;
-    Xconn.countDocuments(query, function(err, docs){
+    Xconn.countDocuments(query, function(err, docs) {
       if (docs === 0) {
         res.render("fail.ejs", {
           fail: "No data for your search",
@@ -373,31 +434,51 @@ app.post("/result", function(req, res) {
 
 
 
-app.post("/resultpptracker", function(req, res){
+app.post("/resultpptracker", function(req, res) {
   const az = _.toLower(req.body.inputForm);
   const pp = _.toLower(req.body.pp);
   const type = req.body.connectionType;
 
   const csvWriter = createCsvWriter({
     path: 'report.csv',
-    header: [
-      {id: 'cluster', title: 'Cluster'},
-      {id: 'az', title: 'AZ'},
-      {id: '_patchpanel', title: 'Patch-Panel ID'},
-      {id: 'capacity', title: 'Current Capacity'},
-      {id: 'fullcapacity', title: 'Full Capacity'},
-      {id: 'rack', title: 'Rack'},
-      {id: 'type', title: 'Connection Type'}
+    header: [{
+        id: 'cluster',
+        title: 'Cluster'
+      },
+      {
+        id: 'az',
+        title: 'AZ'
+      },
+      {
+        id: '_patchpanel',
+        title: 'Patch-Panel ID'
+      },
+      {
+        id: 'capacity',
+        title: 'Current Capacity'
+      },
+      {
+        id: 'fullcapacity',
+        title: 'Full Capacity'
+      },
+      {
+        id: 'rack',
+        title: 'Rack'
+      },
+      {
+        id: 'type',
+        title: 'Connection Type'
+      }
     ]
   });
 
-  fs.truncate(__dirname + '/report.csv', 0, function(){});
+  fs.truncate(__dirname + '/report.csv', 0, function() {});
 
   const query = {};
   query["az"] = az;
 
   // Check whether the AZ has patch-panels
-  PatchPanel.countDocuments(query, function(err, docs){
+  PatchPanel.countDocuments(query, function(err, docs) {
     if (docs === 0) {
       res.render("fail.ejs", {
         fail: _.toUpper(az) + " doesn't have Patch-Panels registered",
@@ -406,26 +487,28 @@ app.post("/resultpptracker", function(req, res){
     } else {
       // If there's no filter, the search looks for all panels inside the AZ.
       if (pp === "" && type === "") {
-        PatchPanel.find(query, function(err, docs){
+        PatchPanel.find(query, function(err, docs) {
           downloadSearch = docs;
           csvWriter.writeRecords(downloadSearch);
           res.render("resultpptracker.ejs", {
             patchpanel: docs,
             az: _.toUpper(az)
           });
-        }).sort({_patchpanel: 1});
+        }).sort({
+          _patchpanel: 1
+        });
       } else if (pp !== "" && type !== "") {
         // If a filter is specified, the search looks for the specific panel in that AZ.
         query["_patchpanel"] = pp;
         query["type"] = type;
-        PatchPanel.countDocuments(query, function(err, docs){
+        PatchPanel.countDocuments(query, function(err, docs) {
           if (docs === 0) {
             res.render("fail.ejs", {
               fail: _.toUpper(az) + " doesn't have a Patch-Panel with " + _.toUpper(type) + " connections under the ID " + _.toUpper(pp),
               route: "/search"
             });
           } else {
-            PatchPanel.find(query, function(err, docs){
+            PatchPanel.find(query, function(err, docs) {
               downloadSearch = docs;
               csvWriter.writeRecords(downloadSearch);
               res.render("resultpptracker.ejs", {
@@ -435,16 +518,16 @@ app.post("/resultpptracker", function(req, res){
             });
           }
         });
-      } else if (pp === "" && type !== ""){
+      } else if (pp === "" && type !== "") {
         query["type"] = type;
-        PatchPanel.countDocuments(query, function(err, docs){
+        PatchPanel.countDocuments(query, function(err, docs) {
           if (docs === 0) {
             res.render("fail.ejs", {
               fail: _.toUpper(az) + " doesn't have a Patch-Panels with " + _.toUpper(type) + " connections",
               route: "/search"
             });
           } else {
-            PatchPanel.find(query, function(err, docs){
+            PatchPanel.find(query, function(err, docs) {
               downloadSearch = docs;
               csvWriter.writeRecords(downloadSearch);
               res.render("resultpptracker.ejs", {
@@ -456,14 +539,14 @@ app.post("/resultpptracker", function(req, res){
         });
       } else {
         query["_patchpanel"] = pp;
-        PatchPanel.countDocuments(query, function(err, docs){
+        PatchPanel.countDocuments(query, function(err, docs) {
           if (docs === 0) {
             res.render("fail.ejs", {
               fail: _.toUpper(az) + " doesn't have a Patch-Panel with the ID of " + _.toUpper(pp),
               route: "/search"
             });
           } else {
-            PatchPanel.find(query, function(err, docs){
+            PatchPanel.find(query, function(err, docs) {
               downloadSearch = docs;
               csvWriter.writeRecords(downloadSearch);
               res.render("resultpptracker.ejs", {
@@ -505,7 +588,7 @@ app.post("/addcircuit", function(req, res) {
   const actionAddUpdate = req.body.page;
 
   // function Add Circuit
-  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, oldAz, ticket, actionAddUpdate, res);
+  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res);
 
 });
 
@@ -528,14 +611,19 @@ app.post("/addpp", function(req, res) {
 
   const cluster = az.slice(0, 3);
 
-  Az.countDocuments({_id: az}, function(err, foundAz) {
+  Az.countDocuments({
+    _id: az
+  }, function(err, foundAz) {
     if (foundAz === 0) {
       res.render("fail.ejs", {
         fail: "No AZ registered with ID " + _.toUpper(az),
         route: "/add"
       });
     } else if (foundAz === 1) {
-      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel) {
+      PatchPanel.countDocuments({
+        _patchpanel: patchPanel,
+        az: az
+      }, function(err, foundPatchPanel) {
         if (foundPatchPanel === 0) {
           const newPatchPanel = new PatchPanel({
             _patchpanel: patchPanel,
@@ -623,13 +711,16 @@ app.post("/addAz", function(req, res) {
 });
 
 
-
-
+let site;
 // Collect the serial ID from the circuit that will be updated.
 app.post("/updatecircuit", function(req, res) {
   const updateSerialID = _.toLower(req.body.inputUpdate);
   const inputForm = _.toLower(req.body.inputForm);
-  Xconn.find({_circuit: updateSerialID, az: inputForm}, function(err, result) {
+  site = inputForm;
+  Xconn.find({
+    _circuit: updateSerialID,
+    az: inputForm
+  }, function(err, result) {
     if (err) {
       console.log(err);
     } else {
@@ -679,26 +770,42 @@ app.post("/update", function(req, res) {
     var az = _.toLower(device.slice(0, 4));
   }
 
-  Az.countDocuments({_id: az}, function(err, foundAz){
-    console.log(foundAz);
+  // console.log(site);
+
+
+
+  Az.countDocuments({
+    _id: az
+  }, function(err, foundAz) {
     console.log(az);
     if (foundAz) {
-      Xconn.findOne({_circuit: serialId, az: az}, function(err, doc){
-
-
-
-          console.log("TESTE");
+      console.log(foundAz, az, site);
+      if (az === site) {
+        Xconn.findOne({
+          _circuit: serialId,
+          az: az
+        }, function(err, doc) {
           console.log(doc);
+
+
           oldPatchPanel = doc.patchpanel;
 
 
           const actionAddUpdate = req.body.page;
 
-          addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, oldAz, ticket, actionAddUpdate, res);
+          addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res);
 
 
 
-      });
+        });
+      } else {
+        res.render("fail.ejs", {
+          fail: "Cross-connects must be edited within the same AZ",
+          route: "/update"
+        });
+      }
+
+
     } else {
       res.render("fail.ejs", {
         fail: "AZ " + _.toUpper(az) + " not found",
@@ -719,7 +826,10 @@ app.post("/update", function(req, res) {
 app.post("/delete", function(req, res) {
   const deleteSerialId = _.toLower(req.body.inputDelete);
   const az = _.toLower(req.body.az);
-  Xconn.find({_circuit: deleteSerialId, az: az}, function(err, result) {
+  Xconn.find({
+    _circuit: deleteSerialId,
+    az: az
+  }, function(err, result) {
     if (err) {
       console.log(err);
     } else {
@@ -745,16 +855,25 @@ app.post("/delete", function(req, res) {
 
 
 
-app.post("/deletepp", function(req, res){
+app.post("/deletepp", function(req, res) {
   const patchPanel = _.toLower(req.body.inputDelete);
   const az = _.toLower(req.body.az);
 
-  PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, docs){
+  PatchPanel.countDocuments({
+    _patchpanel: patchPanel,
+    az: az
+  }, function(err, docs) {
     if (!err) {
       if (docs === 1) {
-        Xconn.countDocuments({patchpanel: patchPanel, az: az}, function(err, numOfConnections){
+        Xconn.countDocuments({
+          patchpanel: patchPanel,
+          az: az
+        }, function(err, numOfConnections) {
           if (numOfConnections === 0) {
-            PatchPanel.find({_patchpanel: patchPanel, az: az}, function(err, pp){
+            PatchPanel.find({
+              _patchpanel: patchPanel,
+              az: az
+            }, function(err, pp) {
               res.render("deletepatchpanel.ejs", {
                 patchpanel: pp,
                 az: _.toUpper(az)
@@ -787,11 +906,14 @@ app.post("/deletepp", function(req, res){
 
 
 
-app.post("/confirmdeletepp", function(req, res){
+app.post("/confirmdeletepp", function(req, res) {
   const az = _.toLower(req.body.az);
   const patchpanel = _.toLower(req.body.patchpanel);
 
-  PatchPanel.findOneAndDelete({_patchpanel: patchpanel, az: az}, function(err, doc){
+  PatchPanel.findOneAndDelete({
+    _patchpanel: patchpanel,
+    az: az
+  }, function(err, doc) {
     res.render("success.ejs", {
       success: "Patch-Panel " + _.toUpper(patchpanel) + " in " + _.toUpper(az) + " has been decommissioned",
       route: "/delete"
@@ -814,9 +936,19 @@ app.post("/deletecircuit", function(req, res) {
     var az = _.toLower(device.slice(0, 4));
   }
 
-  Xconn.findOneAndDelete({_circuit: deleteSerialId, az: az}, function(err, doc) {
+  Xconn.findOneAndDelete({
+    _circuit: deleteSerialId,
+    az: az
+  }, function(err, doc) {
 
-    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: 1}}, function(err, doc) {
+    PatchPanel.findOneAndUpdate({
+      az: az,
+      _patchpanel: patchPanel
+    }, {
+      $inc: {
+        capacity: 1
+      }
+    }, function(err, doc) {
       res.render("success.ejs", {
         success: "Cross-Connect ID " + _.toUpper(deleteSerialId) + " has been decommissioned in " + _.toUpper(az),
         route: "/delete"
@@ -837,43 +969,83 @@ app.post("/generatereport", function(req, res) {
 
   const csvWriter = createCsvWriter({
     path: 'report.csv',
-    header: [
-      {id: 'cluster', title: 'Cluster'},
-      {id: 'az', title: 'AZ'},
-      {id: '_circuit', title: 'Cross-Connect ID'},
-      {id: 'serviceprovider', title: 'Service Provider / Peer'},
-      {id: 'bandwidth', title: 'Bandwidth (Gbps)'},
-      {id: 'device', title: 'Device'},
-      {id: 'interface', title: 'Interface'},
-      {id: 'patchpanel', title: 'Patch-Panel'},
-      {id: 'patchpanelport', title: 'Patch-Panel Port'},
-      {id: 'rack', title: 'Rack'},
-      {id: 'ticket', title: "Ticket Number"}
+    header: [{
+        id: 'cluster',
+        title: 'Cluster'
+      },
+      {
+        id: 'az',
+        title: 'AZ'
+      },
+      {
+        id: '_circuit',
+        title: 'Cross-Connect ID'
+      },
+      {
+        id: 'serviceprovider',
+        title: 'Service Provider / Peer'
+      },
+      {
+        id: 'bandwidth',
+        title: 'Bandwidth (Gbps)'
+      },
+      {
+        id: 'device',
+        title: 'Device'
+      },
+      {
+        id: 'interface',
+        title: 'Interface'
+      },
+      {
+        id: 'patchpanel',
+        title: 'Patch-Panel'
+      },
+      {
+        id: 'patchpanelport',
+        title: 'Patch-Panel Port'
+      },
+      {
+        id: 'rack',
+        title: 'Rack'
+      },
+      {
+        id: 'ticket',
+        title: "Ticket Number"
+      }
     ]
   });
 
-  fs.truncate(__dirname + '/report.csv', 0, function(){});
+  fs.truncate(__dirname + '/report.csv', 0, function() {});
 
   if (report === "cluster") {
 
-    Cluster.countDocuments({_id: filter}, function(err, foundCluster){
+    Cluster.countDocuments({
+      _id: filter
+    }, function(err, foundCluster) {
       if (foundCluster === 0) {
         res.render("fail.ejs", {
           fail: _.toUpper(filter) + " is not registered",
           route: "/report"
         });
       } else if (foundCluster === 1) {
-        Xconn.countDocuments({cluster: filter}, function(err, foundCircuits){
-          if(foundCircuits === 0){
+        Xconn.countDocuments({
+          cluster: filter
+        }, function(err, foundCircuits) {
+          if (foundCircuits === 0) {
             res.render("fail.ejs", {
               fail: _.toUpper(filter) + " doesn't have cross-connect circuits registered",
               route: "/report"
             });
           } else {
 
-            const sort = {az: 1}; // 1 = increase.
+            const sort = {
+              az: 1
+            }; // 1 = increase.
 
-            Xconn.find({cluster: filter}, function(err, docs) {
+            Xconn.find({
+              cluster: filter
+            }, function(err, docs) {
 
               // Generates the file the redirects to downloadSearch, which is a get method to download the file.
               csvWriter.writeRecords(docs);
@@ -892,21 +1064,27 @@ app.post("/generatereport", function(req, res) {
 
   } else {
 
-    Az.countDocuments({_id: filter}, function(err, foundAz){
+    Az.countDocuments({
+      _id: filter
+    }, function(err, foundAz) {
       if (foundAz === 0) {
         res.render("fail.ejs", {
           fail: _.toUpper(filter) + " is not registered",
           route: "/report"
         });
       } else if (foundAz === 1) {
-        Xconn.countDocuments({az: filter}, function(err, foundCircuits){
+        Xconn.countDocuments({
+          az: filter
+        }, function(err, foundCircuits) {
           if (foundCircuits === 0) {
             res.render("fail.ejs", {
               fail: _.toUpper(filter) + " doesn't have cross-connect circuits registered",
               route: "/report"
             });
           } else {
-            Xconn.find({az: filter}, function(err, docs){
+            Xconn.find({
+              az: filter
+            }, function(err, docs) {
 
               csvWriter.writeRecords(docs);
               res.redirect("/downloadSearch");
@@ -925,20 +1103,32 @@ app.post("/generatereport", function(req, res) {
 });
 
 let i = 0;
-function firstInputDatabase(results){
 
-  results.forEach(function(data){
-    Az.countDocuments({_id: data.az}, function(err, foundAz) {
+function firstInputDatabase(results) {
+
+  results.forEach(function(data) {
+    Az.countDocuments({
+      _id: data.az
+    }, function(err, foundAz) {
       if (foundAz === 1) {
         console.log("1");
-        PatchPanel.countDocuments({_patchpanel: data.patchPanel, az: data.az}, function(err, foundPatchPanel) {
+        PatchPanel.countDocuments({
+          _patchpanel: data.patchPanel,
+          az: data.az
+        }, function(err, foundPatchPanel) {
           if (foundPatchPanel === 1) {
             console.log("2");
-            PatchPanel.findOne({_patchpanel: data.patchPanel, az: data.az}, function(err, pp) {
+            PatchPanel.findOne({
+              _patchpanel: data.patchPanel,
+              az: data.az
+            }, function(err, pp) {
               // const rack = pp.rack;
               if (pp.capacity > 0) {
                 console.log("3");
-                Xconn.countDocuments({_circuit: data._circuit, az: data.az}, function(err, doc) {
+                Xconn.countDocuments({
+                  _circuit: data._circuit,
+                  az: data.az
+                }, function(err, doc) {
                   if (doc === 0) {
                     console.log("4");
                     const newCircuit = new Xconn({
@@ -957,7 +1147,14 @@ function firstInputDatabase(results){
                     i++;
                     console.log("Circuit " + i + ": " + newCircuit);
 
-                    PatchPanel.findOneAndUpdate({az: data.az, _patchpanel: data.patchPanel}, {$inc: {capacity: -1}}, function(err, ppupdate) {});
+                    PatchPanel.findOneAndUpdate({
+                      az: data.az,
+                      _patchpanel: data.patchPanel
+                    }, {
+                      $inc: {
+                        capacity: -1
+                      }
+                    }, function(err, ppupdate) {});
                   }
                 });
               }
@@ -970,311 +1167,332 @@ function firstInputDatabase(results){
 }
 
 
-app.post("/upload", function(req, res){
-    const form = new formidable.IncomingForm();
-    //https://shiya.io/simple-file-upload-with-express-js-and-formidable-in-node-js/
-    const oldPatchPanel = "";
-    const ticket = "";
-    const actionAddUpdate = "addcircuit";
-    const results = [];
-    const azs = [];
-    let uniqueAzs = [];
-    const patchpanels = [];
-    let uniquePatchPanels = [];
-    const patchpanelsDB = [];
-    const patchpanelCount = {};
-    const patchpanelsRack = {};
-
-
-    form.parse(req);
-
-    form.on("fileBegin", function(name, file){
-      file.path = __dirname + '/uploads/' + file.name;
-    });
-
-    form.on('file', function (name, file){
-      file[name] = "template.csv";
-      // console.log(file.name);
-
-        fs.createReadStream(__dirname + "/uploads/" + file.name)
-          .pipe(csv())
-          .on("data", (data) => {
-
-            results.push(data);
-
-            // console.log(results);
-
-
-            // console.log(data.az + data.patchpanel);
-
-
-
-            // fs.unlink(file.name);
-            // Az.countDocuments({_id: data.az}, function(err, foundAz) {
-            //   if (foundAz === 1) {
-            //     PatchPanel.countDocuments({_patchpanel: data.patchPanel, az: data.az}, function(err, foundPatchPanel) {
-            //       if (foundPatchPanel === 1) {
-            //         PatchPanel.findOne({_patchpanel: data.patchPanel, az: data.az}, function(err, pp) {
-            //           const rack = pp.rack;
-            //           if (pp.capacity > 0) {
-            //             Xconn.countDocuments({_circuit: data._circuit, az: data.az}, function(err, doc) {
-            //               if (doc === 0) {
-            //                 const newCircuit = new Xconn({
-            //                   _circuit: data._circuit,
-            //                   serviceprovider: data.serviceProvider,
-            //                   bandwidth: data.bandwidth,
-            //                   rack: rack,
-            //                   patchpanel: data.patchPanel,
-            //                   patchpanelport: data.patchPanelPort,
-            //                   device: data.device,
-            //                   interface: data.interface,
-            //                   az: data.az,
-            //                   cluster: data.cluster
-            //                 });
-            //                 newCircuit.save();
-            //
-            //                 PatchPanel.findOneAndUpdate({az: data.az, _patchpanel: data.patchPanel}, {$inc: {capacity: -1}}, function(err, ppupdate) {});
-            //               }
-            //             });
-            //           }
-            //         });
-            //       }
-            //     });
-            //   }
-            // });
-          })
-          .on("end", () => {
-            // console.log(results);
-            // firstInputDatabase(results);
-
-            let resultsString = JSON.stringify(results);
-            let resultsLower = _.toLower(resultsString);
-            let resultsObj = JSON.parse(resultsLower);
-            let rackPosition = {};
-            let ppRack;
-
-
-
-            resultsObj.forEach(arrayFile => {
-              azs.push(arrayFile.az);
-              patchpanels.push(arrayFile.patchpanel);
-              PatchPanel.findOne({az: arrayFile.az, _patchpanel: arrayFile.patchpanel}, (err, doc) => {
-                // console.log(doc.rack);
-                rackPosition[arrayFile.patchpanel] = doc.rack;
-              });
-            });
-
-
-
-
-
-            // https://wsvincent.com/javascript-remove-duplicates-array/
-            uniqueAzs = [...new Set(azs)];
-            uniquePatchPanels = [...new Set(patchpanels)];
-
-
-
-            uniquePatchPanels.forEach((panel) => {
-              let count = 0;
-              for (var i = 0; i < patchpanels.length; i++) {
-                if (panel === patchpanels[i]) {
-                  count++;
-                }
-              }
-              patchpanelCount[panel] = count;
-              // console.log(patchpanelCount);
-            });
+app.post("/upload", function(req, res) {
+  const form = new formidable.IncomingForm();
+  //https://shiya.io/simple-file-upload-with-express-js-and-formidable-in-node-js/
+  const oldPatchPanel = "";
+  const ticket = "";
+  const actionAddUpdate = "addcircuit";
+  const results = [];
+  const azs = [];
+  let uniqueAzs = [];
+  const patchpanels = [];
+  let uniquePatchPanels = [];
+  const patchpanelsDB = [];
+  const patchpanelCount = {};
+  const patchpanelsRack = {};
+
+
+  form.parse(req);
+
+  form.on("fileBegin", function(name, file) {
+    file.path = __dirname + '/uploads/' + file.name;
+  });
+
+  form.on('file', function(name, file) {
+    file[name] = "template.csv";
+    // console.log(file.name);
+
+    fs.createReadStream(__dirname + "/uploads/" + file.name)
+      .pipe(csv())
+      .on("data", (data) => {
+
+        results.push(data);
+
+        // console.log(results);
+
+
+        // console.log(data.az + data.patchpanel);
+
+
+
+        // fs.unlink(file.name);
+        // Az.countDocuments({_id: data.az}, function(err, foundAz) {
+        //   if (foundAz === 1) {
+        //     PatchPanel.countDocuments({_patchpanel: data.patchPanel, az: data.az}, function(err, foundPatchPanel) {
+        //       if (foundPatchPanel === 1) {
+        //         PatchPanel.findOne({_patchpanel: data.patchPanel, az: data.az}, function(err, pp) {
+        //           const rack = pp.rack;
+        //           if (pp.capacity > 0) {
+        //             Xconn.countDocuments({_circuit: data._circuit, az: data.az}, function(err, doc) {
+        //               if (doc === 0) {
+        //                 const newCircuit = new Xconn({
+        //                   _circuit: data._circuit,
+        //                   serviceprovider: data.serviceProvider,
+        //                   bandwidth: data.bandwidth,
+        //                   rack: rack,
+        //                   patchpanel: data.patchPanel,
+        //                   patchpanelport: data.patchPanelPort,
+        //                   device: data.device,
+        //                   interface: data.interface,
+        //                   az: data.az,
+        //                   cluster: data.cluster
+        //                 });
+        //                 newCircuit.save();
+        //
+        //                 PatchPanel.findOneAndUpdate({az: data.az, _patchpanel: data.patchPanel}, {$inc: {capacity: -1}}, function(err, ppupdate) {});
+        //               }
+        //             });
+        //           }
+        //         });
+        //       }
+        //     });
+        //   }
+        // });
+      })
+      .on("end", () => {
+        // console.log(results);
+        // firstInputDatabase(results);
+
+        let resultsString = JSON.stringify(results);
+        let resultsLower = _.toLower(resultsString);
+        let resultsObj = JSON.parse(resultsLower);
+        let rackPosition = {};
+        let ppRack;
+
+
+
+        resultsObj.forEach(arrayFile => {
+          azs.push(arrayFile.az);
+          patchpanels.push(arrayFile.patchpanel);
+          PatchPanel.findOne({
+            az: arrayFile.az,
+            _patchpanel: arrayFile.patchpanel
+          }, (err, doc) => {
+            // console.log(doc.rack);
+            rackPosition[arrayFile.patchpanel] = doc.rack;
+          });
+        });
+
+
+
+
+
+        // https://wsvincent.com/javascript-remove-duplicates-array/
+        uniqueAzs = [...new Set(azs)];
+        uniquePatchPanels = [...new Set(patchpanels)];
 
 
 
-
-
+        uniquePatchPanels.forEach((panel) => {
+          let count = 0;
+          for (var i = 0; i < patchpanels.length; i++) {
+            if (panel === patchpanels[i]) {
+              count++;
+            }
+          }
+          patchpanelCount[panel] = count;
+          // console.log(patchpanelCount);
+        });
 
-            // console.log(uniqueAzs.length + uniqueAzs[0]);
-            if (uniqueAzs.length === 1) {
-              Xconn.countDocuments({az: uniqueAzs[0]}, function(err, foundXconn){
-                if (!foundXconn) {
-                  // console.log(uniqueAzs[0]);
-                  Az.countDocuments({_id: uniqueAzs[0]}, function(err, foundAz){
-                    // console.log(foundAz);
-                    if (foundAz) {
 
-                      PatchPanel.find({az: uniqueAzs[0]}, function(err, foundPP){
-                        foundPP.forEach((pps) => {
-                          // console.log(pps._patchpanel);
-                          patchpanelsDB.push(pps._patchpanel);
-                          patchpanelsRack[pps._patchpanel] = pps.rack;
-                        });
 
-                        if (uniquePatchPanels.length !== patchpanelsDB.length) {
-                          res.render("fail.ejs", {
-                            fail: "Patch-Panels must be registered prior to uploading the CSV file",
-                            route: "/add"
-                          });
-                        } else if (_.toLower(uniquePatchPanels.sort()) !== _.toLower(patchpanelsDB.sort())) {
-                          res.render("fail.ejs", {
-                            fail: "All Patch-Panels from the CSV file must match the ones registered on the database",
-                            route: "/add"
-                          });
-                        } else {
-                          // let resultsString = JSON.stringify(results);
-                          // let resultsLower = _.toLower(resultsString);
-                          // let resultsObj = JSON.parse(resultsLower);
 
-                          // console.log(foundPP);
 
-                          const circuitArray = [];
 
-                          resultsObj.forEach((element) => {
-                            circuitArray.push(element._circuit);
-                          });
-                          let uniqueCircuitArray = [...new Set(circuitArray)];
+        // console.log(uniqueAzs.length + uniqueAzs[0]);
+        if (uniqueAzs.length === 1) {
+          Xconn.countDocuments({
+            az: uniqueAzs[0]
+          }, function(err, foundXconn) {
+            if (!foundXconn) {
+              // console.log(uniqueAzs[0]);
+              Az.countDocuments({
+                _id: uniqueAzs[0]
+              }, function(err, foundAz) {
+                // console.log(foundAz);
+                if (foundAz) {
 
-                          // console.log(circuitArray);
-                          // console.log(uniqueCircuitArray);
+                  PatchPanel.find({
+                    az: uniqueAzs[0]
+                  }, function(err, foundPP) {
+                    foundPP.forEach((pps) => {
+                      // console.log(pps._patchpanel);
+                      patchpanelsDB.push(pps._patchpanel);
+                      patchpanelsRack[pps._patchpanel] = pps.rack;
+                    });
 
-                          if (uniqueCircuitArray.length === circuitArray.length) {
-                            // console.log("match");
-
-                            Xconn.insertMany(resultsObj, function(err, docs){
-                              // docs.forEach((panel) => {
-                              //   console.log(panel.patchpanel);
-                              //   PatchPanel.findOne({az: uniqueAzs[0], _patchpanel: panel.patchpanel}, (err, foundPP) => {
-                              //     console.log(foundPP._patchpanel);
-                              //
-                              //     // foundPP.forEach((pp) => {
-                              //     //   Xconn.updateMany({az: uniqueAzs[0], patchpanel: pp.patchpanel}, {rack: pp.rack}, () => {
-                              //     //     // console.log(pp.rack);
-                              //     //   });
-                              //     //
-                              //     // });
-                              //     // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, {rack: foundPP.rack});
-                              //   });
-                              // });
-
-                              uniquePatchPanels.forEach((panel) => {
-                                let amountOfXconns = patchpanelCount[panel];
-                                ppRack = rackPosition[panel];
-                                console.log(ppRack);
-
-                                Xconn.updateMany({az: uniqueAzs[0], patchpanel: panel}, {rack: ppRack}, (err, docs) => {
-                                  console.log("rack: " + docs.rack);
-                                  console.log(docs.n, docs.nModified);
-                                });
-
-                                // console.log(amountOfXconns);
-                                PatchPanel.updateOne({az: uniqueAzs[0], _patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
-                                  // console.log("Patch-panel " + panel + " updated");
-                                  // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, {rack: });
-                                  // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, )
-
-                                });
-
-                                // Xconn.updateMany({az: uniqueAzs[0], patchpanel: panel}, {rack: ppRack}, (err, docs) => {
-                                //   console.log("rack: " + docs.rack);
-                                //   console.log(docs.n, docs.nModified);
-                                // });
-                                // console.log(rackPosition[panel]);
-
-
-                              });
-
-
-
-
-
-                              res.render("success.ejs", {
-                                success: "Records updated for " + _.toUpper(uniqueAzs[0]),
-                                route: "/"
-                              });
-                            });
-
-
-
-
-
-
-                          } else {
-                            // console.log("do not match");
-                            res.render("fail.ejs", {
-                              fail: "There are duplicated IDs in the CSV file. Fix that prior to uploading the file",
-                              route: "/"
-                            });
-                          }
-
-                          // console.log(elementArray);
-
-
-
-
-                          // uniquePatchPanels.forEach((panel) => {
-                          //   let amountOfXconns = patchpanelCount[panel];
-                          //   // console.log(amountOfXconns);
-                          //   PatchPanel.updateOne({_patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
-                          //     console.log("Patch-panel " + panel + " updated");
-                          //   });
-                          // });
-                          // console.log(foundPP);
-
-
-                          // Xconn.insertMany(resultsObj, function(err, docs){
-                          //   res.render("success.ejs", {
-                          //     success: "Records updated for " + _.toUpper(uniqueAzs[0]),
-                          //     route: "/"
-                          //   });
-                          // });
-                        }
-                      });
-
-                    } else {
+                    if (uniquePatchPanels.length !== patchpanelsDB.length) {
                       res.render("fail.ejs", {
-                        fail: "No AZ record found for " + uniqueAzs[0],
+                        fail: "Patch-Panels must be registered prior to uploading the CSV file",
                         route: "/add"
                       });
+                    } else if (_.toLower(uniquePatchPanels.sort()) !== _.toLower(patchpanelsDB.sort())) {
+                      res.render("fail.ejs", {
+                        fail: "All Patch-Panels from the CSV file must match the ones registered on the database",
+                        route: "/add"
+                      });
+                    } else {
+                      // let resultsString = JSON.stringify(results);
+                      // let resultsLower = _.toLower(resultsString);
+                      // let resultsObj = JSON.parse(resultsLower);
+
+                      // console.log(foundPP);
+
+                      const circuitArray = [];
+
+                      resultsObj.forEach((element) => {
+                        circuitArray.push(element._circuit);
+                      });
+                      let uniqueCircuitArray = [...new Set(circuitArray)];
+
+                      // console.log(circuitArray);
+                      // console.log(uniqueCircuitArray);
+
+                      if (uniqueCircuitArray.length === circuitArray.length) {
+                        // console.log("match");
+
+                        Xconn.insertMany(resultsObj, function(err, docs) {
+                          // docs.forEach((panel) => {
+                          //   console.log(panel.patchpanel);
+                          //   PatchPanel.findOne({az: uniqueAzs[0], _patchpanel: panel.patchpanel}, (err, foundPP) => {
+                          //     console.log(foundPP._patchpanel);
+                          //
+                          //     // foundPP.forEach((pp) => {
+                          //     //   Xconn.updateMany({az: uniqueAzs[0], patchpanel: pp.patchpanel}, {rack: pp.rack}, () => {
+                          //     //     // console.log(pp.rack);
+                          //     //   });
+                          //     //
+                          //     // });
+                          //     // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, {rack: foundPP.rack});
+                          //   });
+                          // });
+
+                          uniquePatchPanels.forEach((panel) => {
+                            let amountOfXconns = patchpanelCount[panel];
+                            ppRack = rackPosition[panel];
+                            console.log(ppRack);
+
+                            Xconn.updateMany({
+                              az: uniqueAzs[0],
+                              patchpanel: panel
+                            }, {
+                              rack: ppRack
+                            }, (err, docs) => {
+                              console.log("rack: " + docs.rack);
+                              console.log(docs.n, docs.nModified);
+                            });
+
+                            // console.log(amountOfXconns);
+                            PatchPanel.updateOne({
+                              az: uniqueAzs[0],
+                              _patchpanel: panel
+                            }, {
+                              $inc: {
+                                capacity: -amountOfXconns
+                              }
+                            }, () => {
+                              // console.log("Patch-panel " + panel + " updated");
+                              // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, {rack: });
+                              // Xconn.updateOne({az: uniqueAzs[0], patchpanel: panel}, )
+
+                            });
+
+                            // Xconn.updateMany({az: uniqueAzs[0], patchpanel: panel}, {rack: ppRack}, (err, docs) => {
+                            //   console.log("rack: " + docs.rack);
+                            //   console.log(docs.n, docs.nModified);
+                            // });
+                            // console.log(rackPosition[panel]);
+
+
+                          });
+
+
+
+
+
+                          res.render("success.ejs", {
+                            success: "Records updated for " + _.toUpper(uniqueAzs[0]),
+                            route: "/"
+                          });
+                        });
+
+
+
+
+
+
+                      } else {
+                        // console.log("do not match");
+                        res.render("fail.ejs", {
+                          fail: "There are duplicated IDs in the CSV file. Fix that prior to uploading the file",
+                          route: "/"
+                        });
+                      }
+
+                      // console.log(elementArray);
+
+
+
+
+                      // uniquePatchPanels.forEach((panel) => {
+                      //   let amountOfXconns = patchpanelCount[panel];
+                      //   // console.log(amountOfXconns);
+                      //   PatchPanel.updateOne({_patchpanel: panel}, {$inc: {capacity: -amountOfXconns}}, () => {
+                      //     console.log("Patch-panel " + panel + " updated");
+                      //   });
+                      // });
+                      // console.log(foundPP);
+
+
+                      // Xconn.insertMany(resultsObj, function(err, docs){
+                      //   res.render("success.ejs", {
+                      //     success: "Records updated for " + _.toUpper(uniqueAzs[0]),
+                      //     route: "/"
+                      //   });
+                      // });
                     }
                   });
 
-
                 } else {
                   res.render("fail.ejs", {
-                    fail: _.toUpper(uniqueAzs[0]) + " already contains Cross-Connections registered. Please add new connections individually",
+                    fail: "No AZ record found for " + uniqueAzs[0],
                     route: "/add"
                   });
                 }
               });
+
+
             } else {
               res.render("fail.ejs", {
-                fail: "Please upload one CSV file per AZ",
-                route: "/upload-cv"
+                fail: _.toUpper(uniqueAzs[0]) + " already contains Cross-Connections registered. Please add new connections individually",
+                route: "/add"
               });
             }
-
-            // Xconn.countDocuments({az: az[0]}, function(err, foundXconn){
-            //   if (!foundXconn) {
-            //     Xconn.insertMany(results, function(err, docs){
-            //       console.log(docs);
-            //       res.render("success.ejs", {
-            //         success: "Cross-Connect records uploaded sucessfully",
-            //         route: "/"
-            //       });
-            //     });
-            //   } else {
-            //     res.render("fail.ejs", {
-            //       fail: _.toUpper(az[0]) + " contains Cross-Connects registered. Please either decommission all connections for your AZ or upload the new circuits one by one",
-            //       route: "/"
-            //     });
-            //   }
-            // });
-
-            fs.unlink(__dirname + "/uploads/" + file.name, (err) => {
-              if (err) {
-                console.error(err)
-                return
-              }
-            });
-
           });
-    });
+        } else {
+          res.render("fail.ejs", {
+            fail: "Please upload one CSV file per AZ",
+            route: "/upload-cv"
+          });
+        }
+
+        // Xconn.countDocuments({az: az[0]}, function(err, foundXconn){
+        //   if (!foundXconn) {
+        //     Xconn.insertMany(results, function(err, docs){
+        //       console.log(docs);
+        //       res.render("success.ejs", {
+        //         success: "Cross-Connect records uploaded sucessfully",
+        //         route: "/"
+        //       });
+        //     });
+        //   } else {
+        //     res.render("fail.ejs", {
+        //       fail: _.toUpper(az[0]) + " contains Cross-Connects registered. Please either decommission all connections for your AZ or upload the new circuits one by one",
+        //       route: "/"
+        //     });
+        //   }
+        // });
+
+        fs.unlink(__dirname + "/uploads/" + file.name, (err) => {
+          if (err) {
+            console.error(err)
+            return
+          }
+        });
+
+      });
+  });
 });
 
 
@@ -1294,13 +1512,13 @@ app.get("/search", function(req, res) {
   });
 });
 
-app.get("/searchcircuit", function(req, res){
+app.get("/searchcircuit", function(req, res) {
   res.render("searchcircuit.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
 });
 
-app.get("/searchpp", function(req, res){
+app.get("/searchpp", function(req, res) {
   res.render("searchpp.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
@@ -1343,7 +1561,7 @@ app.get("/deletexconn", function(req, res) {
   });
 });
 
-app.get("/deletepp", function(req, res){
+app.get("/deletepp", function(req, res) {
   res.render("deletepp.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
@@ -1355,20 +1573,20 @@ app.get("/report", function(req, res) {
   });
 });
 
-app.get("/downloadSearch", function(req, res){
+app.get("/downloadSearch", function(req, res) {
   res.setHeader('Content-disposition', 'attachment; filename=report.csv');
   res.setHeader('content-type', 'text/csv');
   res.download(__dirname + '/report.csv');
 });
 
-app.get("/downloadTemplate", function(req, res){
+app.get("/downloadTemplate", function(req, res) {
   console.log("Download template");
   res.setHeader('Content-disposition', 'attachment; filename=cross-connect-template.csv');
   res.setHeader('content-type', 'text/csv');
   res.download(__dirname + '/downloads/cross-connect-template.csv');
 });
 
-app.get("/upload-csv", function(req, res){
+app.get("/upload-csv", function(req, res) {
   res.render("upload.ejs", {
     skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
   });
