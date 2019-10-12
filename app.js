@@ -115,69 +115,23 @@ const Cluster = mongoose.model("Cluster", clusterSchema);
 
 
 
-function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res) {
+function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, oldAz, ticket, actionAddUpdate, res) {
   Az.countDocuments({_id: az}, function(err, foundAz) {
     if (foundAz === 1) {
-      PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel) {
-        if (foundPatchPanel === 1) {
-          PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, pp) {
-            const rack = pp.rack;
-            if ((pp.capacity > 0) && (actionAddUpdate === "addcircuit")) {
-              Xconn.countDocuments({_circuit: serialId, az: az}, function(err, doc) {
-                if (doc === 0) {
-                  const newCircuit = new Xconn({
-                    _circuit: serialId,
-                    serviceprovider: serviceProvider,
-                    bandwidth: bandwidth,
-                    rack: rack,
-                    patchpanel: patchPanel,
-                    patchpanelport: patchPanelPort,
-                    device: device,
-                    interface: interface,
-                    az: az,
-                    cluster: device.slice(0, 3),
-                    ticket: ticket
-                  });
-                  newCircuit.save();
-                  res.render("success.ejs", {
-                    success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az),
-                    route: "/addcircuit"
-                  });
-                  PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, ppupdate) {});
-                } else {
-                  res.render("fail.ejs", {
-                    fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az),
-                    route: "/addcircuit"
-                  });
-                }
-              });
-
-            } else if (actionAddUpdate === "updatecircuit") {
-              if (foundPatchPanel === 1) {
-                if (oldPatchPanel === patchPanel) {
-                  Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
-                    _circuit: serialId,
-                    serviceprovider: serviceProvider,
-                    bandwidth: bandwidth,
-                    patchpanel: patchPanel,
-                    patchpanelport: patchPanelPort,
-                    device: device,
-                    interface: interface,
-                    az: az,
-                    cluster: device.slice(0, 3)
-                  }, function(err, ppupdate) {
-                    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, function(err, doc) {});
-                    res.render("success.ejs", {
-                      success: "Circuit ID " + _.toUpper(serialId) + " updated",
-                      route: "/update"
-                    });
-                  });
-                } else {
-                  if (pp.capacity > 0) {
-                    const rack = pp.rack;
-                    PatchPanel.findOneAndUpdate({az: az, _patchpanel: oldPatchPanel}, {$inc: {capacity: 1}}, function(err, doc) {});
-
-                    Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
+      if (az !== oldAz) {
+        res.render("fail.ejs", {
+          fail: "Must be the same AZ",
+          route: "/update"
+        });
+      } else {
+        PatchPanel.countDocuments({_patchpanel: patchPanel, az: az}, function(err, foundPatchPanel) {
+          if (foundPatchPanel === 1) {
+            PatchPanel.findOne({_patchpanel: patchPanel, az: az}, function(err, pp) {
+              const rack = pp.rack;
+              if ((pp.capacity > 0) && (actionAddUpdate === "addcircuit")) {
+                Xconn.countDocuments({_circuit: serialId, az: az}, function(err, doc) {
+                  if (doc === 0) {
+                    const newCircuit = new Xconn({
                       _circuit: serialId,
                       serviceprovider: serviceProvider,
                       bandwidth: bandwidth,
@@ -187,44 +141,106 @@ function addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPa
                       device: device,
                       interface: interface,
                       az: az,
+                      cluster: device.slice(0, 3),
+                      ticket: ticket
+                    });
+                    newCircuit.save();
+                    res.render("success.ejs", {
+                      success: "Circuit ID " + _.toUpper(newCircuit._circuit) + " saved for " + _.toUpper(newCircuit.az),
+                      route: "/addcircuit"
+                    });
+                    PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, ppupdate) {});
+                  } else {
+                    res.render("fail.ejs", {
+                      fail: "Circuit ID " + _.toUpper(serialId) + " already registered in the database for " + _.toUpper(az),
+                      route: "/addcircuit"
+                    });
+                  }
+                });
+
+              } else if (actionAddUpdate === "updatecircuit") {
+                console.log(oldAz);
+                if (oldAz === az) {
+                  if (oldPatchPanel === patchPanel) {
+                    Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
+                      _circuit: serialId,
+                      serviceprovider: serviceProvider,
+                      bandwidth: bandwidth,
+                      patchpanel: patchPanel,
+                      patchpanelport: patchPanelPort,
+                      device: device,
+                      interface: interface,
+                      az: az,
                       cluster: device.slice(0, 3)
-                    }, function(err, doc) {
-                      PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, doc) {});
+                    }, function(err, ppupdate) {
+                      PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, function(err, doc) {});
                       res.render("success.ejs", {
                         success: "Circuit ID " + _.toUpper(serialId) + " updated",
                         route: "/update"
                       });
                     });
                   } else {
-                    res.render("fail.ejs", {
-                      fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
-                      route: "/update"
-                    });
+                    if (pp.capacity > 0) {
+                      const rack = pp.rack;
+                      PatchPanel.findOneAndUpdate({az: az, _patchpanel: oldPatchPanel}, {$inc: {capacity: 1}}, function(err, doc) {});
+
+                      Xconn.findOneAndUpdate({_circuit: serialId, az: az}, {
+                        _circuit: serialId,
+                        serviceprovider: serviceProvider,
+                        bandwidth: bandwidth,
+                        rack: rack,
+                        patchpanel: patchPanel,
+                        patchpanelport: patchPanelPort,
+                        device: device,
+                        interface: interface,
+                        az: az,
+                        cluster: device.slice(0, 3)
+                      }, function(err, doc) {
+                        PatchPanel.findOneAndUpdate({az: az, _patchpanel: patchPanel}, {$inc: {capacity: -1}}, function(err, doc) {});
+                        res.render("success.ejs", {
+                          success: "Circuit ID " + _.toUpper(serialId) + " updated",
+                          route: "/update"
+                        });
+                      });
+                    } else {
+                      res.render("fail.ejs", {
+                        fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
+                        route: "/update"
+                      });
+                    }
+
                   }
-
+                } else {
+                  res.render("fail.ejs", {
+                    fail: "To update a cross-connect, the AZ must be the same",
+                    route: "/update"
+                  });
                 }
+                if (foundPatchPanel === 1) {
 
+
+                } else {
+                  res.render("fail.ejs", {
+                    success: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+                    route: "/update"
+                  });
+                }
               } else {
                 res.render("fail.ejs", {
-                  success: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+                  fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
                   route: "/update"
                 });
               }
-            } else {
-              res.render("fail.ejs", {
-                fail: "No capacity to deploy a new circuit on panel " + _.toUpper(patchPanel),
-                route: "/update"
-              });
-            }
 
-          });
-        } else {
-          res.render("fail.ejs", {
-            fail: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
-            route: "/add"
-          });
-        }
-      });
+            });
+          } else {
+            res.render("fail.ejs", {
+              fail: _.toUpper(patchPanel) + " is not registered for " + _.toUpper(az),
+              route: "/add"
+            });
+          }
+        });
+      }
     } else {
       res.render("fail.ejs", {
         fail: _.toUpper(az) + " is not registered",
@@ -476,6 +492,7 @@ app.post("/addcircuit", function(req, res) {
   const interface = _.toLower(req.body.interface);
   const ticket = _.toLower(req.body.ticket);
   let oldPatchPanel;
+  let oldAz;
 
   const cluster = device.slice(0, 3);
 
@@ -488,7 +505,7 @@ app.post("/addcircuit", function(req, res) {
   const actionAddUpdate = req.body.page;
 
   // function Add Circuit
-  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res);
+  addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, oldAz, ticket, actionAddUpdate, res);
 
 });
 
@@ -651,7 +668,8 @@ app.post("/update", function(req, res) {
   const interface = _.toLower(req.body.interface);
   const ticket = _.toLower(req.body.ticket);
 
-  let oldPatchPanel;
+  var oldPatchPanel;
+  var oldAz;
 
   const cluster = device.slice(0, 3);
 
@@ -661,13 +679,35 @@ app.post("/update", function(req, res) {
     var az = _.toLower(device.slice(0, 4));
   }
 
-  Xconn.findOne({_circuit: serialId, az: az}, function(err, doc){
-    oldPatchPanel = doc.patchpanel;
+  Az.countDocuments({_id: az}, function(err, foundAz){
+    console.log(foundAz);
+    console.log(az);
+    if (foundAz) {
+      Xconn.findOne({_circuit: serialId, az: az}, function(err, doc){
 
-    const actionAddUpdate = req.body.page;
 
-    addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, ticket, actionAddUpdate, res);
+
+          console.log("TESTE");
+          console.log(doc);
+          oldPatchPanel = doc.patchpanel;
+
+
+          const actionAddUpdate = req.body.page;
+
+          addCircuit(serialId, serviceProvider, bandwidth, patchPanel, oldPatchPanel, patchPanelPort, device, interface, cluster, az, oldAz, ticket, actionAddUpdate, res);
+
+
+
+      });
+    } else {
+      res.render("fail.ejs", {
+        fail: "AZ " + _.toUpper(az) + " not found",
+        route: "/update"
+      });
+    }
   });
+
+
 
 
 });
