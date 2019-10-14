@@ -1592,7 +1592,12 @@ app.get("/upload-csv", function(req, res) {
   });
 });
 
-
+app.use((req, res, next) => {
+  res.render("404.ejs", {
+    notfound: "Page Not Found",
+    skyrimPhrases: skyrimPhrases[randomSkyrimPhrase(skyrimPhrases.length)]
+  });
+});
 
 
 app.listen(3000, function() {
